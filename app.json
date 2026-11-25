@@ -1,0 +1,72 @@
+{
+  "expo": {
+    "name": "Moneylah!",
+    "slug": "moneylah",
+    "scheme": "moneylah",
+    "version": "1.0.0",
+    "orientation": "default",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "platforms": [
+      "ios"
+    ],
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.pocketledger.t56mtmagbkk",
+      "appleTeamId": "56MTMAGBKK"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-sqlite",
+      "expo-sharing",
+      "expo-status-bar",
+      "expo-font",
+      "expo-localization",
+      "@react-native-community/datetimepicker",
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160,
+          "backgroundColor": "#0D8575"
+        }
+      ],
+      [
+        "expo-local-authentication",
+        {
+          "faceIDPermission": "Unlock your financial records with Face ID."
+        }
+      ],
+      [
+        "expo-widgets",
+        {
+          "bundleIdentifier": "com.pocketledger.t56mtmagbkk.widgets",
+          "groupIdentifier": "group.com.pocketledger.t56mtmagbkk",
+          "widgets": [
+            {
+              "name": "MonthWidget",
+              "displayName": "This month",
+              "description": "Income, spending and budget for the current month.",
+              "supportedFamilies": [
+                "systemSmall",
+                "systemMedium"
+              ]
+            }
+          ]
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "ios": {
+            "usePrecompiledModules": false
+          }
+        }
+      ],
+      "./plugins/shortcut/withAddTransactionShortcut"
+    ],
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}

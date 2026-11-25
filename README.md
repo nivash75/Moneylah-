@@ -1,0 +1,78 @@
+# Moneylah!
+
+A private, on-device income, expense and budget tracker for iPhone and iPad, built with React Native (Expo) and TypeScript.
+
+It follows Apple's [Liquid Glass](https://developer.apple.com/documentation/technologyoverviews/liquid-glass) guidance by using the system tab bar, navigation bar buttons and controls. Glass is kept to navigation and actions; content cards stay solid.
+
+## Features
+
+- Expenses, income and transfers, with categories and subcategories
+- List and calendar views
+- Weekly, monthly and yearly statistics
+- Accounts, net worth, credit card statements and payments
+- Monthly budgets
+- Multiple currencies with manually entered exchange rates
+- Face ID / passcode lock
+- CSV export, backup and restore
+- Home screen widget for the current month
+- "Add Transaction" shortcut for Back Tap, the Action button and Siri
+
+Not included yet: iCloud sync, and viewing your data on a PC over Wi-Fi.
+
+## Run it
+
+Needs Node 24 or later and Xcode. Expo Go is not enough, because the widget and Face ID need a native build.
+
+```sh
+npm install
+npm run ios                      # builds and opens the simulator
+EXPO_PUBLIC_DEMO=1 npm run ios   # same, with sample data on a fresh install
+```
+
+Sample data can also be loaded from Settings in development builds.
+
+`app.json` turns off Expo's precompiled iOS modules. With them on, the app crashed at launch because `React.framework` was missing, so the first native build compiles from source and takes longer.
+
+## Back Tap
+
+Double-tap the back of an iPhone to start a new transaction:
+
+1. In the Shortcuts app, tap +, add the Moneylah! action **Add Transaction**, and close it.
+2. In iPhone Settings, open Accessibility > Touch > Back Tap > Double Tap and choose that shortcut.
+
+The action is defined in `plugins/shortcut/`. Back Tap needs a real iPhone.
+
+## Check it
+
+```sh
+npm test            # money, balances, card cycles, CSV and backup logic
+npm run typecheck
+```
+
+## Run on your own iPhone
+
+1. In `app.json`, check `ios.appleTeamId` and the three identifiers (app, widget and app group). To use another Apple account, change all four.
+2. Run `npx expo prebuild --platform ios --clean`.
+3. Open `ios/Moneylah.xcworkspace` in Xcode and choose your team for both targets.
+4. Run `npx expo run:ios --device --configuration Release` so the app works without the dev server.
+
+With a free Apple account the install stops opening after 7 days. Run step 4 again to renew it, without deleting the app, so your records are kept.
+
+The `ios/` folder is generated from `app.json`, so don't edit it by hand.
+
+## Layout
+
+| Folder        | Contents                                   |
+| ------------- | ------------------------------------------ |
+| `src/core`    | Pure logic with no React Native imports    |
+| `src/data`    | SQLite storage and app state               |
+| `src/app`     | Screens (expo-router)                      |
+| `src/ui`      | Shared components and app lock             |
+| `src/widgets` | Home screen widget                         |
+| `tests`       | Tests for `src/core`                       |
+
+## Data and privacy
+
+Records are stored in a local SQLite database and the app makes no network requests of its own. The app lock hides the screens; it does not add encryption beyond what iOS provides. Backup and CSV files are not encrypted.
+
+Amounts are stored as whole numbers in each currency's smallest unit, to avoid rounding errors.
