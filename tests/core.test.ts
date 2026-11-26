@@ -1,9 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { digits, format, makeConverter, parseAmount, plain } from '../src/core/money.ts';
-import { balance, breakdown, byId, cardStatement, converterFor, inPeriod, periodOf, shift, spent, totals } from '../src/core/ledger.ts';
+import { convertAt, digits, format, makeConverter, parseAmount, plain, rateBetween } from '../src/core/money.ts';
+import { balance, breakdown, byId, cardStatement, converterFor, endOfDay, forecast, inPeriod, periodDays, periodOf, previousComparable, shift, spent, totals } from '../src/core/ledger.ts';
 import { accountInUse, removeAccount, removeCategory, upsert } from '../src/core/actions.ts';
-import { csvField, toCsv } from '../src/core/csv.ts';
+import { foreignCurrencies, parseRates } from '../src/core/liveRates.ts';
+import { addBillCategories } from '../src/core/billCategories.ts';
+import { csvField, localDay, toCsv } from '../src/core/csv.ts';
 import { fromBackup, toBackup } from '../src/core/backup.ts';
 import { account, demoState, initialState } from '../src/core/seed.ts';
 import type { Txn } from '../src/core/types.ts';
@@ -45,6 +47,27 @@ test('conversion handles direct, inverse and missing rates', () => {
   assert.equal(c.convert(1000, 'EUR', 'EUR'), 1000);
 });
 
+test('a typed exchange rate converts both ways', () => {
+  // 1 SGD = 63 INR: ₹50.00 is $0.79, and $10.00 is ₹630.00.
+  assert.equal(convertAt(5000, 'INR', 'SGD', 'SGD', 63), 79);
+  assert.equal(convertAt(1000, 'SGD', 'INR', 'SGD', 63), 63000);
+  assert.equal(convertAt(1000, 'JPY', 'SGD', 'SGD', 110), 909);
+  assert.equal(rateBetween(1000, 'SGD', 63000, 'INR'), 63);
+  for (const bad of [0, -1, NaN, Infinity]) assert.equal(convertAt(5000, 'INR', 'SGD', 'SGD', bad), null);
+});
+
+test('downloaded rates are validated and stored as the value of 1 foreign unit', () => {
+  const reply = { result: 'success', base_code: 'SGD', rates: { INR: 72, USD: 0.8, BAD: -1 } };
+  const rates = parseRates(reply, 'SGD', ['INR', 'USD', 'BAD', 'XXX']);
+  assert.deepEqual(rates.map((r) => r.id), ['INR', 'USD']);
+  assert.equal(makeConverter('SGD', rates).convert(1000, 'SGD', 'INR'), 72000);
+  for (const bad of [null, {}, { ...reply, result: 'error' }, { ...reply, base_code: 'USD' }]) assert.throws(() => parseRates(bad, 'SGD', ['INR']), /unexpected reply/);
+  const s = initialState('SGD');
+  assert.deepEqual(foreignCurrencies(s), []);
+  s.accounts.push(account('sbi', 'SBI', 'bank', 'INR'));
+  assert.deepEqual(foreignCurrencies(s), ['INR']);
+});
+
 test('periods are half-open and shift cleanly', () => {
   const p = periodOf('month', day(2026, 1, 31));
   assert.equal(p.start, day(2026, 1, 1, 0));
@@ -53,6 +76,47 @@ test('periods are half-open and shift cleanly', () => {
   assert.equal(shift(p, 1).start, day(2026, 2, 1, 0));
   assert.equal(periodOf('week', day(2026, 11, 25)).start, day(2026, 11, 23, 0));
   assert.equal(shift(periodOf('week', day(2026, 11, 25)), -1).start, day(2026, 11, 16, 0));
+});
+
+test('monthly cycles reset on the chosen day', () => {
+  const cycle = (date: number, start: number) => periodOf('month', date, 1, start);
+  const p = cycle(day(2026, 11, 24, 23), 25);
+  assert.equal(p.start, day(2026, 10, 25, 0));
+  assert.equal(p.end, day(2026, 11, 25, 0));
+  assert.equal(cycle(day(2026, 11, 25, 0), 25).start, day(2026, 11, 25, 0));
+  assert.equal(cycle(day(2027, 1, 3), 25).start, day(2026, 12, 25, 0));
+  assert.equal(shift(p, 2).start, day(2026, 12, 25, 0));
+  // Day 31 falls on the last day of shorter months, then returns to the 31st.
+  const jan = cycle(day(2026, 2, 27), 31);
+  assert.deepEqual([jan.start, jan.end], [day(2026, 1, 31, 0), day(2026, 2, 28, 0)]);
+  const feb = shift(jan, 1);
+  assert.deepEqual([feb.start, feb.end], [day(2026, 2, 28, 0), day(2026, 3, 31, 0)]);
+  assert.equal(shift(feb, 1).start, day(2026, 3, 31, 0));
+  assert.equal(shift(feb, -1).start, jan.start);
+});
+
+test('projection repeats what followed in earlier periods instead of multiplying bills', () => {
+  const s = initialState('SGD');
+  const run = (list: Txn[], now: number) => forecast(list, () => true, periodOf('month', now), now, converterFor(s), byId(s.accounts));
+  const spend = (id: string, amount: number, date: number) => txn(id, { amount, baseAmount: amount, date });
+  // No earlier month: 10 days at 100 a day extends to 30 days.
+  const fresh = run([spend('a', 1000, day(2026, 11, 1))], day(2026, 11, 10));
+  assert.deepEqual(fresh, { spent: 1000, projected: 3000, daysLeft: 21, history: 0 });
+  // Rent on the 1st is not repeated; spending after the 10th in October is.
+  const list = [spend('r1', 100000, day(2026, 10, 1)), spend('o', 5000, day(2026, 10, 20)), spend('r2', 100000, day(2026, 11, 1))];
+  assert.deepEqual(run(list, day(2026, 11, 10)), { spent: 100000, projected: 105000, daysLeft: 21, history: 1 });
+  // A larger expense already entered for later raises the estimate, and counts as spent.
+  const later = run([...list, spend('p', 8000, day(2026, 11, 28))], day(2026, 11, 10));
+  assert.deepEqual([later.spent, later.projected], [108000, 108000]);
+  assert.equal(run(list, day(2026, 11, 30)).projected, 100000);
+  assert.equal(run([], day(2026, 11, 10)).projected, 0);
+});
+
+test('comparisons use the same number of days while a period is running', () => {
+  const november = periodOf('month', day(2026, 11, 10));
+  assert.deepEqual(periodDays(november, day(2026, 11, 10)), { total: 30, elapsed: 10 });
+  assert.equal(previousComparable(november, day(2026, 11, 10)).end, day(2026, 10, 11, 0));
+  assert.equal(previousComparable(november, day(2027, 1, 1)).end, day(2026, 11, 1, 0));
 });
 
 test('balances, totals and transfers', () => {
@@ -66,6 +130,13 @@ test('balances, totals and transfers', () => {
   assert.equal(balance(cash, list), 2000);
   assert.equal(balance(bank, list), 2000);
   assert.deepEqual(totals(list, converterFor(s), byId(s.accounts)), { income: 5000, expense: 1000, unconverted: 0 });
+});
+
+test("today's balance counts all of today and nothing dated later", () => {
+  const cash = initialState('SGD').accounts[0];
+  const today = endOfDay(day(2026, 11, 26, 9));
+  const list = [txn('1', { date: day(2026, 11, 26, 23) }), txn('2', { date: day(2026, 11, 27, 0) })];
+  assert.equal(balance(cash, list, today), -1000);
 });
 
 test('unknown rates are reported rather than guessed', () => {
@@ -124,6 +195,33 @@ test('deleting accounts and categories keeps data consistent', () => {
   assert.equal(renamed.accounts.length, s.accounts.length);
 });
 
+test('bill categories are added once, reusing ones the user already has', () => {
+  const start = initialState('SGD');
+  start.categories.push({ id: 'mine', name: 'bills', icon: 'star', kind: 'expense', parentId: null, order: 99 });
+  const added = addBillCategories(start);
+  const named = (name: string) => added.categories.filter((c) => c.name.toLowerCase() === name.toLowerCase());
+  assert.deepEqual(named('Bills').map((c) => [c.id, c.icon]), [['mine', 'star']]);
+  assert.equal(named('Broadband')[0].parentId, 'mine');
+  assert.equal(named('EZ-Link pass')[0].parentId, 'expense.Transport');
+  assert.equal(named('Transport').length, 1);
+  assert.equal(new Set(added.categories.map((c) => c.id)).size, added.categories.length);
+  assert.deepEqual(added.txns, start.txns);
+  // Deleted categories stay deleted, including after a backup and restore.
+  const trimmed = removeCategory(added, 'mine');
+  assert.equal(addBillCategories(trimmed), trimmed);
+  const restored = fromBackup(toBackup(trimmed));
+  assert.equal(addBillCategories(restored), restored);
+  // A later addition reaches earlier users without bringing back what they deleted.
+  const earlier = { ...trimmed, categories: trimmed.categories.filter((c) => c.name !== 'GrabPayLater'), settings: { ...trimmed.settings, categorySet: 1 } };
+  const updated = addBillCategories(earlier);
+  assert.deepEqual(updated.categories.slice(earlier.categories.length).map((c) => [c.name, c.parentId]), [['GrabPayLater', 'expense.Installments']]);
+});
+
+test('file dates follow the local day, even just after midnight', () => {
+  assert.equal(localDay(day(2026, 11, 26, 0)), '2026-11-26');
+  assert.equal(localDay(day(2027, 1, 5, 23)), '2027-01-05');
+});
+
 test('CSV escapes quotes and neutralises formulas', () => {
   assert.equal(csvField('=1+1'), `"'=1+1"`);
   assert.equal(csvField('say "hi", ok'), '"say ""hi"", ok"');
@@ -134,8 +232,12 @@ test('CSV escapes quotes and neutralises formulas', () => {
 test('backup round-trips and rejects damaged files', () => {
   const s = demoState('SGD');
   assert.deepEqual(fromBackup(toBackup(s)), s);
+  const old = JSON.parse(toBackup(s));
+  delete old.state.settings.cycleDay;
+  assert.equal(fromBackup(JSON.stringify(old)).settings.cycleDay, 1);
   const broken = (mutate: (f: any) => void) => { const f = JSON.parse(toBackup(s)); mutate(f); return JSON.stringify(f); };
   assert.throws(() => fromBackup('nope'), /not valid JSON/);
+  assert.throws(() => fromBackup(broken((f) => (f.state.settings.cycleDay = 32))), /bad settings/);
   assert.throws(() => fromBackup('{}'), /not a Moneylah! backup/);
   assert.throws(() => fromBackup(broken((f) => (f.version = 9))), /unsupported/);
   assert.throws(() => fromBackup(broken((f) => (f.state.txns[0].amount = 1.5))), /bad amount/);

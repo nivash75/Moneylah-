@@ -40,7 +40,7 @@ export default function BudgetForm() {
       <Screen>
         <Card><Field label={`Monthly limit (${currency})`} value={text} onChangeText={setText} keyboardType="decimal-pad" placeholder="0" autoFocus={!existing} /></Card>
         <Card title="Applies to"><Chips value={categoryId} onChange={setCategoryId} options={options} /></Card>
-        <Note>The same limit applies to every month.</Note>
+        <Note>The same limit applies to every monthly cycle.</Note>
         {existing ? (
           <Button kind="danger" title="Delete budget" onPress={() => confirm('Delete budget?', 'Your transactions are not affected.', 'Delete', () => { if (update((s) => remove(s, 'budgets', existing.id))) router.back(); })} />
         ) : null}

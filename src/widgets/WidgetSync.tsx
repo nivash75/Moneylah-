@@ -3,11 +3,10 @@ import { AppState } from 'react-native';
 import { format } from '../core/money';
 import { inPeriod, periodOf, shift, spent, totals } from '../core/ledger';
 import { useLedger } from '../data/store';
+import { periodTitle } from '../ui/periods';
 import MonthWidget from './MonthWidget';
 
-const monthTitle = (ms: number) => new Date(ms).toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-
-/** Pushes this month's summary to the home screen widget whenever the data changes. */
+/** Pushes the current cycle's summary to the home screen widget whenever the data changes. */
 export function WidgetSync() {
   const { state, accounts, categories, converter } = useLedger();
   const [activations, setActivations] = useState(0);
@@ -18,7 +17,7 @@ export function WidgetSync() {
   }, []);
 
   useEffect(() => {
-    const month = periodOf('month', Date.now());
+    const month = periodOf('month', Date.now(), 1, state.settings.cycleDay);
     const sum = totals(state.txns.filter(inPeriod(month)), converter, accounts);
     const overall = state.budgets.find((b) => b.categoryId === null);
     const used = overall ? spent(overall, state.txns, month, converter, accounts, categories) : null;
@@ -27,9 +26,9 @@ export function WidgetSync() {
     const next = shift(month, 1);
     try {
       MonthWidget.updateTimeline([
-        { date: new Date(), props: { title: monthTitle(month.start), income: money(sum.income), expense: money(sum.expense), budget: !hide && overall && used !== null && overall.amount > 0 ? used / overall.amount : -1 } },
-        // Start the new month at zero even if the app isn't opened.
-        { date: new Date(next.start), props: { title: monthTitle(next.start), income: money(0), expense: money(0), budget: -1 } },
+        { date: new Date(), props: { title: periodTitle(month), income: money(sum.income), expense: money(sum.expense), budget: !hide && overall && used !== null && overall.amount > 0 ? used / overall.amount : -1 } },
+        // Start the new cycle at zero even if the app isn't opened.
+        { date: new Date(next.start), props: { title: periodTitle(next), income: money(0), expense: money(0), budget: -1 } },
       ]);
     } catch (error) {
       console.warn('Widget update failed', error);

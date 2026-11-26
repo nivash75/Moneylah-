@@ -3,9 +3,11 @@ import { router } from 'expo-router';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { fromBackup, toBackup } from '../../../core/backup';
-import { toCsv } from '../../../core/csv';
+import { addBillCategories } from '../../../core/billCategories';
+import { localDay, toCsv } from '../../../core/csv';
 import { demoState } from '../../../core/seed';
 import { useLedger } from '../../../data/store';
+import { backupStatus, useDriveBackup } from '../../../ui/driveBackup';
 import { authenticate, canLock } from '../../../ui/LockGate';
 import { Card, confirm, Note, Row, Screen } from '../../../ui/kit';
 
@@ -37,7 +39,8 @@ async function share(name: string, text: string, mimeType: string, UTI: string) 
 export default function Settings() {
   const { state, update } = useLedger();
   const { settings } = state;
-  const today = new Date().toISOString().slice(0, 10);
+  const today = localDay(Date.now());
+  const backUp = useDriveBackup();
 
   const setLock = async (on: boolean) => {
     if (on && !(await canLock())) return Alert.alert('No device passcode', 'Set up Face ID or a passcode on this device first.');
@@ -51,8 +54,8 @@ export default function Settings() {
     if (picked.result.size > MAX_BACKUP_BYTES) throw new Error('The file is too large to be a backup.');
     const restored = fromBackup(await picked.result.text());
     confirm('Replace all data?', `The backup holds ${restored.txns.length} transactions. Everything currently in the app will be deleted.`, 'Replace', () => {
-      // The app lock stays as it is on this device.
-      if (update((s) => ({ ...restored, settings: { ...restored.settings, lockEnabled: s.settings.lockEnabled } }))) Alert.alert('Backup restored');
+      // The app lock and backup date stay as they are on this device.
+      if (update((s) => addBillCategories({ ...restored, settings: { ...restored.settings, lockEnabled: s.settings.lockEnabled, lastBackup: s.settings.lastBackup } }))) Alert.alert('Backup restored');
     });
   };
 
@@ -75,13 +78,14 @@ export default function Settings() {
       </Card>
       <Card title="Your data">
         <Row icon="document-text" title="Export CSV" onPress={() => void share(`moneylah-${today}.csv`, toCsv(state), 'text/csv', 'public.comma-separated-values-text').catch(report('Export failed'))} />
-        <Row icon="cloud-upload" title="Back up" onPress={() => void share(`moneylah-backup-${today}.json`, toBackup(state), 'application/json', 'public.json').catch(report('Backup failed'))} />
+        <Row icon="cloud-upload" title="Back up to iCloud Drive" subtitle={backupStatus(settings.lastBackup)} onPress={backUp} />
+        <Row icon="share" title="Share a backup" onPress={() => void share(`moneylah-backup-${today}.json`, toBackup(state), 'application/json', 'public.json').catch(report('Backup failed'))} />
         <Row icon="cloud-download" title="Restore from backup" onPress={() => void restore().catch(report('Restore failed'))} />
       </Card>
-      <Note>Your records stay on this device. Backup files are not encrypted, so keep them somewhere private, such as iCloud Drive.</Note>
+      <Note>Backups are not automatic: tap Back up to iCloud Drive and pick a folder there. To restore, choose that file. Backup files are not encrypted, so keep them somewhere private.</Note>
       {__DEV__ ? (
         <Card title="Development">
-          <Row icon="flask" title="Load sample data" onPress={() => confirm('Load sample data?', 'Everything currently in the app will be replaced.', 'Replace', () => { update((s) => ({ ...demoState(s.settings.baseCurrency), settings: s.settings })); })} />
+          <Row icon="flask" title="Load sample data" onPress={() => confirm('Load sample data?', 'Everything currently in the app will be replaced.', 'Replace', () => { update((s) => addBillCategories({ ...demoState(s.settings.baseCurrency), settings: { ...s.settings, categorySet: 0 } })); })} />
         </Card>
       ) : null}
     </Screen>

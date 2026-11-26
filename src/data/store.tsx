@@ -3,16 +3,17 @@ import { Alert } from 'react-native';
 import { getLocales } from 'expo-localization';
 import type { State } from '../core/types';
 import { demoState, initialState } from '../core/seed';
+import { addBillCategories } from '../core/billCategories';
 import { byId, converterFor } from '../core/ledger';
 import { loadState, saveState } from './db';
 
 function firstState(): State {
   const stored = loadState();
-  if (stored) return stored;
   const currency = getLocales()[0]?.currencyCode ?? 'USD';
-  const fresh = __DEV__ && process.env.EXPO_PUBLIC_DEMO === '1' ? demoState(currency) : initialState(currency);
-  saveState(null, fresh);
-  return fresh;
+  const loaded = stored ?? (__DEV__ && process.env.EXPO_PUBLIC_DEMO === '1' ? demoState(currency) : initialState(currency));
+  const state = addBillCategories(loaded);
+  if (state !== stored) saveState(stored, state);
+  return state;
 }
 
 type Update = (change: (state: State) => State) => boolean;

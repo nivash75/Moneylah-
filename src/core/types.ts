@@ -46,7 +46,7 @@ export interface Txn {
 
 export interface Budget {
   id: string;
-  /** Monthly limit. */
+  /** Limit per monthly cycle. */
   amount: number;
   currency: string;
   /** null means all spending. */
@@ -64,6 +64,16 @@ export interface Settings {
   baseCurrency: string;
   lockEnabled: boolean;
   hideWidgetAmounts: boolean;
+  /** Day of the month (1-31) when monthly totals and budgets reset. */
+  cycleDay: number;
+  /** Which built-in category additions have been applied. */
+  categorySet: number;
+  /** Fetch today's exchange rates, replacing saved ones. */
+  autoRates: boolean;
+  /** When rates were last fetched on this device, or 0. */
+  ratesUpdated: number;
+  /** When a backup was last saved to a folder from this device, or 0. */
+  lastBackup: number;
 }
 
 export interface State {

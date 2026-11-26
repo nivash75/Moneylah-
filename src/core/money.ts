@@ -36,6 +36,18 @@ export function parseAmount(input: string, code: string, separator = '.'): numbe
   return sign && minor !== 0 ? -minor : minor;
 }
 
+/** Converts using a typed rate, where 1 `unit` is worth `rate` of the other currency. */
+export function convertAt(minor: number, from: string, to: string, unit: string, rate: number): number | null {
+  if (!Number.isFinite(rate) || rate <= 0) return null;
+  const major = minor / 10 ** digits(from);
+  const result = Math.round((from === unit ? major * rate : major / rate) * 10 ** digits(to));
+  return Number.isFinite(result) && Math.abs(result) <= MAX_MINOR ? result : null;
+}
+
+/** What 1 `unit` is worth in `other`, given matching amounts of each. */
+export const rateBetween = (unitMinor: number, unit: string, otherMinor: number, other: string) =>
+  otherMinor / 10 ** digits(other) / (unitMinor / 10 ** digits(unit));
+
 export interface Converter {
   base: string;
   /** null when no rate is known. Callers must surface that rather than assume 1:1. */
