@@ -1,11 +1,12 @@
 import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
 import { router, Stack } from 'expo-router';
-import { inPeriod, periodOf, shift, totals } from '../../../core/ledger';
+import { inPeriod, totals } from '../../../core/ledger';
 import { format, plain } from '../../../core/money';
 import type { Txn } from '../../../core/types';
 import { useLedger } from '../../../data/store';
 import { Card, Note, Screen, Segmented, Stepper, T, useTheme } from '../../../ui/kit';
+import { periodTitle, usePeriod } from '../../../ui/periods';
 import { SummaryRow, TxnRow } from '../../../ui/TxnRow';
 
 const dayStart = (ms: number) => new Date(ms).setHours(0, 0, 0, 0);
@@ -13,11 +14,15 @@ const dayStart = (ms: number) => new Date(ms).setHours(0, 0, 0, 0);
 export default function Transactions() {
   const { state, accounts, converter } = useLedger();
   const theme = useTheme();
-  const [month, setMonth] = useState(() => periodOf('month', Date.now()));
+  const { period: month, step } = usePeriod('month');
   const [mode, setMode] = useState<'list' | 'calendar'>('list');
-  const [selected, setSelected] = useState(() => dayStart(Date.now()));
+  const [picked, setSelected] = useState(() => dayStart(Date.now()));
+  // A day outside the period being viewed falls back to today, then to the first day.
+  const within = (ms: number) => ms >= month.start && ms < month.end;
+  const today = dayStart(Date.now());
+  const selected = within(picked) ? picked : within(today) ? today : month.start;
 
-  const inMonth = useMemo(() => state.txns.filter(inPeriod(month)).sort((a, b) => b.date - a.date), [state.txns, month]);
+  const inMonth = useMemo(() => state.txns.filter(inPeriod(month)).sort((a, b) => b.date - a.date), [state.txns, month.start, month.end]);
   const days = useMemo(() => {
     const map = new Map<number, Txn[]>();
     for (const t of inMonth) {
@@ -33,16 +38,10 @@ export default function Transactions() {
   const sum = totals(inMonth, converter, accounts);
   const dayTitle = (ms: number) => new Date(ms).toLocaleDateString(undefined, { weekday: 'short', day: 'numeric', month: 'short' });
 
-  const step = (direction: -1 | 1) => {
-    const next = shift(month, direction);
-    setMonth(next);
-    setSelected(inPeriod(next)({ date: Date.now() } as Txn) ? dayStart(Date.now()) : next.start);
-  };
-
   const first = new Date(month.start);
   const blanks = (first.getDay() + 6) % 7; // Monday first
-  const length = new Date(first.getFullYear(), first.getMonth() + 1, 0).getDate();
-  const cells = [...Array<null>(blanks).fill(null), ...Array.from({ length }, (_, i) => +new Date(first.getFullYear(), first.getMonth(), i + 1))];
+  const cells: (number | null)[] = Array<null>(blanks).fill(null);
+  for (let i = 0, day = month.start; day < month.end; day = +new Date(first.getFullYear(), first.getMonth(), first.getDate() + ++i)) cells.push(day);
   while (cells.length % 7) cells.push(null);
   const compact = (v: number) => (v ? new Intl.NumberFormat(undefined, { maximumFractionDigits: 0 }).format(Number(plain(v, converter.base))) : ' ');
 
@@ -53,7 +52,7 @@ export default function Transactions() {
       </Stack.Toolbar>
       <Screen>
         <Segmented value={mode} onChange={setMode} options={[{ value: 'list', label: 'List' }, { value: 'calendar', label: 'Calendar' }]} />
-        <Stepper title={first.toLocaleDateString(undefined, { month: 'long', year: 'numeric' })} onStep={step} />
+        <Stepper title={periodTitle(month)} onStep={step} />
         <Card>
           <SummaryRow items={[
             { label: 'Income', value: money(sum.income), color: theme.income },
@@ -68,7 +67,7 @@ export default function Transactions() {
             {[...days].map(([day, list]) => (
               <Card key={day} title={dayTitle(day)}>{list.map((t) => <TxnRow key={t.id} txn={t} />)}</Card>
             ))}
-            {inMonth.length === 0 ? <Note>No transactions this month. Tap + to add one.</Note> : null}
+            {inMonth.length === 0 ? <Note>No transactions in this period. Tap + to add one.</Note> : null}
           </>
         ) : (
           <>

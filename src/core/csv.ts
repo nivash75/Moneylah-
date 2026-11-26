@@ -9,9 +9,14 @@ export function csvField(text: string): string {
 }
 
 const pad = (n: number) => String(n).padStart(2, '0');
+/** The local date as YYYY-MM-DD, for records and file names. */
+export function localDay(ms: number): string {
+  const d = new Date(ms);
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
 function stamp(ms: number): string {
   const d = new Date(ms);
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  return `${localDay(ms)} ${pad(d.getHours())}:${pad(d.getMinutes())}`;
 }
 
 export function toCsv(state: State): string {

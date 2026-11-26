@@ -18,12 +18,12 @@ const Month = (props: MonthProps, environment: WidgetEnvironment) => {
     <Text modifiers={[font({ size, weight: 'semibold' }), foregroundStyle(color), lineLimit(1), minimumScaleFactor(0.5), privacySensitive()]}>{text}</Text>
   );
   return (
-    <VStack alignment="leading" spacing={4} modifiers={[frame({ maxWidth: 10000, maxHeight: 10000, alignment: 'topLeading' }), containerBackground(dark ? '#1C1C1E' : '#FFFFFF', 'widget')]}>
-      <Text modifiers={[font({ size: 13 }), foregroundStyle(dark ? '#9A9AA2' : '#6B6B73'), lineLimit(1)]}>{props.title || 'Moneylah!'}</Text>
-      {line(props.expense ? `Spent ${props.expense}` : 'Open the app', dark ? '#FF8A5B' : '#D9480F', 20)}
-      {props.income ? line(`Income ${props.income}`, dark ? '#66B3FF' : '#1C7ED6', 14) : null}
-      {props.budget >= 0 ? <ProgressView value={Math.min(props.budget, 1)} modifiers={[tint(props.budget > 1 ? '#E03131' : '#0D8575')]} /> : null}
-      {props.budget >= 0 ? line(`${Math.round(props.budget * 100)}% of budget`, dark ? '#9A9AA2' : '#6B6B73', 12) : null}
+    <VStack alignment="leading" spacing={4} modifiers={[frame({ maxWidth: 10000, maxHeight: 10000, alignment: 'topLeading' }), containerBackground(dark ? '#12211A' : '#FFFFFF', 'widget')]}>
+      <Text modifiers={[font({ size: 13 }), foregroundStyle(dark ? '#97A69D' : '#5F6B64'), lineLimit(1)]}>{props.title || 'Moneylah!'}</Text>
+      {line(props.expense ? `Spent ${props.expense}` : 'Open the app', dark ? '#FF6B6B' : '#D32F2F', 20)}
+      {props.income ? line(`Income ${props.income}`, dark ? '#4ADE80' : '#1E7F3C', 14) : null}
+      {props.budget >= 0 ? <ProgressView value={Math.min(props.budget, 1)} modifiers={[tint(props.budget > 1 ? '#E03131' : dark ? '#8CC4A6' : '#0B3D2E')]} /> : null}
+      {props.budget >= 0 ? line(`${Math.round(props.budget * 100)}% of budget`, dark ? '#97A69D' : '#5F6B64', 12) : null}
     </VStack>
   );
 };

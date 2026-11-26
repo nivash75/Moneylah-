@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { View } from 'react-native';
 import { router, Stack } from 'expo-router';
 import { useLedger } from '../data/store';
 import { Card, Row, Screen, Segmented } from '../ui/kit';
@@ -17,7 +18,9 @@ export default function Categories() {
       {sorted.filter((c) => !c.parentId).map((root) => (
         <Card key={root.id}>
           <Row icon={root.icon} title={root.name} onPress={() => edit(root.id)} />
-          {sorted.filter((c) => c.parentId === root.id).map((c) => <Row key={c.id} title={`      ${c.name}`} onPress={() => edit(c.id)} />)}
+          {sorted.filter((c) => c.parentId === root.id).map((c) => (
+            <View key={c.id} style={{ paddingLeft: 28 }}><Row icon={c.icon} title={c.name} onPress={() => edit(c.id)} /></View>
+          ))}
         </Card>
       ))}
     </Screen>

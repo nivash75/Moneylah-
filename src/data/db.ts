@@ -12,7 +12,8 @@ export function loadState(): State | null {
   if (rows.length === 0) return null;
   const out: Record<string, unknown> = { accounts: [], categories: [], txns: [], budgets: [], rates: [] };
   for (const row of rows) {
-    if (row.kind === 'settings') out.settings = JSON.parse(row.json);
+    // Defaults cover settings saved by earlier versions.
+    if (row.kind === 'settings') out.settings = { cycleDay: 1, categorySet: 0, autoRates: true, ratesUpdated: 0, lastBackup: 0, ...JSON.parse(row.json) };
     else (out[row.kind] as unknown[]).push(JSON.parse(row.json));
   }
   if (!out.settings) throw new Error('The database has no settings record.');

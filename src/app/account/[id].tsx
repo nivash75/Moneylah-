@@ -1,5 +1,5 @@
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import { balance, cardStatement } from '../../core/ledger';
+import { balance, cardStatement, endOfDay } from '../../core/ledger';
 import { format } from '../../core/money';
 import { useLedger } from '../../data/store';
 import { Button, Card, Note, Row, Screen } from '../../ui/kit';
@@ -15,7 +15,7 @@ export default function AccountDetail() {
 
   const money = (v: number) => format(v, account.currency);
   const history = state.txns.filter((t) => t.accountId === id || t.toAccountId === id).sort((a, b) => b.date - a.date);
-  const current = balance(account, state.txns, Date.now());
+  const current = balance(account, state.txns, endOfDay(Date.now()));
   const card = account.kind === 'card' ? cardStatement(account, state.txns) : null;
 
   return (

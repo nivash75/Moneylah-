@@ -2,7 +2,7 @@ import { View } from 'react-native';
 import Svg, { Circle, G } from 'react-native-svg';
 import { T, useTheme } from './kit';
 
-export const PALETTE = ['#0D8575', '#E8890C', '#4C6EF5', '#D6336C', '#7048E8', '#5C940D', '#1098AD', '#E03131', '#868E96'];
+export const PALETTE = ['#4F7F67', '#D4AF37', '#4C6EF5', '#D6336C', '#7048E8', '#8C5E3C', '#1098AD', '#E8590C', '#868E96'];
 
 export function Donut({ values, label }: { values: number[]; label: string }) {
   const total = values.reduce((a, b) => a + b, 0);

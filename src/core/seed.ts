@@ -31,7 +31,7 @@ export function initialState(currency: string): State {
     txns: [],
     budgets: [],
     rates: [],
-    settings: { baseCurrency: currency, lockEnabled: false, hideWidgetAmounts: false },
+    settings: { baseCurrency: currency, lockEnabled: false, hideWidgetAmounts: false, cycleDay: 1, categorySet: 0, autoRates: true, ratesUpdated: 0, lastBackup: 0 },
   };
 }
 

@@ -55,7 +55,16 @@ export function fromBackup(text: string): State {
   const s = raw.settings;
   if (!isObject(s) || !isCurrencyCode(s.baseCurrency) || !bool(s.lockEnabled) || !bool(s.hideWidgetAmounts)) fail('bad settings');
   const settings = s as Record<string, unknown>;
-  out.settings = { baseCurrency: settings.baseCurrency, lockEnabled: settings.lockEnabled, hideWidgetAmounts: settings.hideWidgetAmounts };
+  // Backups made before cycle days existed used calendar months.
+  const cycleDay = settings.cycleDay ?? 1;
+  if (!int(cycleDay) || (cycleDay as number) < 1 || (cycleDay as number) > 31) fail('bad settings');
+  const autoRates = settings.autoRates ?? true;
+  const categorySet = settings.categorySet ?? 0;
+  if (!bool(autoRates) || !int(categorySet)) fail('bad settings');
+  out.settings = { baseCurrency: settings.baseCurrency, lockEnabled: settings.lockEnabled, hideWidgetAmounts: settings.hideWidgetAmounts, cycleDay,
+    autoRates, categorySet,
+    // These belong to the device, not to the records.
+    ratesUpdated: 0, lastBackup: 0 };
   const state = out as unknown as State;
 
   const accounts = new Set(state.accounts.map((a) => a.id));

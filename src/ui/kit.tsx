@@ -7,8 +7,8 @@ import { getLocales } from 'expo-localization';
 // The library's class typing predates React Native's current types.
 const SegmentedControl = NativeSegmentedControl as unknown as ComponentType<SegmentedControlProps>;
 
-const light = { bg: '#F2F2F7', card: '#FFFFFF', text: '#111114', dim: '#6B6B73', line: '#E3E3E8', accent: '#0D8575', onAccent: '#FFFFFF', income: '#1C7ED6', expense: '#D9480F', danger: '#C92A2A', warn: '#B35C00' };
-const dark: typeof light = { bg: '#000000', card: '#1C1C1E', text: '#F5F5F7', dim: '#9A9AA2', line: '#2E2E32', accent: '#3DC2AB', onAccent: '#00201B', income: '#66B3FF', expense: '#FF8A5B', danger: '#FF6B6B', warn: '#FFB454' };
+const light = { bg: '#EFF6F0', card: '#FFFFFF', text: '#111114', dim: '#5F6B64', line: '#DDEFE0', accent: '#0B3D2E', onAccent: '#FFFFFF', income: '#1E7F3C', expense: '#D32F2F', danger: '#C92A2A', warn: '#B35C00' };
+const dark: typeof light = { bg: '#06110C', card: '#12211A', text: '#F5F5F7', dim: '#97A69D', line: '#263A2F', accent: '#8CC4A6', onAccent: '#062219', income: '#4ADE80', expense: '#FF6B6B', danger: '#FF6B6B', warn: '#FFB454' };
 
 export const useTheme = () => (useColorScheme() === 'dark' ? dark : light);
 export const decimalSeparator = () => getLocales()[0]?.decimalSeparator ?? '.';

@@ -1,5 +1,5 @@
 import { router, Stack } from 'expo-router';
-import { balance } from '../../../core/ledger';
+import { balance, endOfDay } from '../../../core/ledger';
 import { format } from '../../../core/money';
 import { ACCOUNT_KINDS } from '../../../core/types';
 import { useLedger } from '../../../data/store';
@@ -10,7 +10,9 @@ import { SummaryRow } from '../../../ui/TxnRow';
 export default function Accounts() {
   const { state, converter } = useLedger();
   const theme = useTheme();
-  const rows = state.accounts.map((account) => ({ account, balance: balance(account, state.txns) }));
+  const today = endOfDay(Date.now());
+  const rows = state.accounts.map((account) => ({ account, balance: balance(account, state.txns, today) }));
+  const upcoming = state.txns.some((t) => t.date > today);
   let assets = 0;
   let debts = 0;
   let missing = 0;
@@ -48,6 +50,7 @@ export default function Accounts() {
           return items.length ? <Card key={kind} title={accountTitle(kind)}>{list(items)}</Card> : null;
         })}
         {archived.length ? <Card title="Archived">{list(archived)}</Card> : null}
+        {upcoming ? <Note>Balances are as of today. Transactions dated later are counted on their date.</Note> : null}
       </Screen>
     </>
   );

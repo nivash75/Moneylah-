@@ -6,7 +6,7 @@ import { removeCategory, upsert } from '../core/actions';
 import { useLedger } from '../data/store';
 import { Button, Card, Chips, confirm, Field, Screen } from '../ui/kit';
 
-const ICONS = ['pricetag', 'restaurant', 'cafe', 'cart', 'bag', 'home', 'bus', 'car', 'airplane', 'medkit', 'fitness', 'film', 'game-controller', 'book', 'school', 'gift', 'paw', 'phone-portrait', 'wifi', 'flash', 'shirt', 'briefcase', 'star', 'trending-up', 'add-circle', 'heart', 'ellipsis-horizontal-circle'];
+const ICONS = ['pricetag', 'restaurant', 'cafe', 'cart', 'bag', 'home', 'bus', 'car', 'airplane', 'medkit', 'fitness', 'film', 'game-controller', 'book', 'school', 'gift', 'paw', 'phone-portrait', 'wifi', 'flash', 'shirt', 'briefcase', 'star', 'trending-up', 'add-circle', 'heart', 'receipt', 'calendar', 'cloud', 'business', 'train', 'desktop', 'headset', 'laptop', 'tv', 'water', 'card', 'cash', 'wallet', 'shield-checkmark', 'ellipsis-horizontal-circle'];
 
 export default function CategoryForm() {
   const params = useLocalSearchParams<{ id?: string; kind?: 'expense' | 'income' }>();
