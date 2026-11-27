@@ -35,6 +35,31 @@ Clone with `-b Android` to get the Android version.
 
 Not included yet: iCloud sync and automatic iCloud backup (both need a paid Apple Developer account), and viewing your data on a PC over Wi-Fi.
 
+## Install
+
+### Android
+
+1. On your phone, open [apk/Moneylah.apk](apk/Moneylah.apk) and tap the download button.
+2. Open the downloaded file. If Android asks, allow your browser or Files app to install unknown apps.
+3. Tap **Install**, then **Open**.
+
+This is version 1.1.0 for 64-bit ARM phones, signed with the debug key, so treat it as a test build.
+
+### iPhone and iPad
+
+There is no App Store version yet. Build it on a Mac with Xcode, as described in [Run on your own iPhone](#run-on-your-own-iphone).
+
+## How to use
+
+1. **Add your accounts.** On the **Accounts** tab, tap **+** and add your bank accounts, cash and cards.
+2. **Record transactions.** On the **Transactions** tab, tap **+** and enter the amount, category and account. Switch between **List** and **Calendar** at the top; in Calendar, **+** adds to the selected day.
+3. **Set your cycle.** On the **Budgets** tab, tap **Cycle starts on** and pick a day, such as payday. Monthly totals and budgets reset on that day.
+4. **Add budgets.** On the **Budgets** tab, tap **+** to set a monthly limit for a category.
+5. **Check your spending.** The **Stats** tab shows weekly, monthly and yearly totals and spending by category.
+6. **Back up.** In **Settings > Your data**, tap **Back up to a folder** (Android) or **Back up to iCloud Drive** (iPhone). Backups are not automatic. Use **Restore from backup** to bring them back.
+7. **Lock the app.** In **Settings > Privacy**, turn on the app lock.
+8. **Add the widget.** Long-press your home screen, add a widget and choose Moneylah!.
+
 ## Run it
 
 Needs a Mac with Node 24 or later and Xcode. Expo Go is not enough, because the widget and Face ID need a native build.
@@ -80,7 +105,7 @@ The `ios/` folder is generated from `app.json`, so don't edit it by hand.
 
 ## Android
 
-To install without building, download [apk/Moneylah.apk](apk/Moneylah.apk) on your phone, open it and allow the installation. It is version 1.1.0 for 64-bit ARM phones, signed with the debug key, so treat it as a test build.
+To install the ready-made APK, see [Install](#install). To build it yourself:
 
 Needs Android Studio, which provides the Android SDK and Java. The folder path must not contain `!`: Gradle fails to build from such a path.
 
