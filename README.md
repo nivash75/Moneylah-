@@ -1,5 +1,9 @@
 # Moneylah!
 
+[![CI](https://github.com/tnivash/Moneylah-/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tnivash/Moneylah-/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tnivash/Moneylah-)](https://github.com/tnivash/Moneylah-/releases/latest)
+[![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A private, on-device income, expense and budget tracker for iPhone and iPad, built with React Native (Expo) and TypeScript.
 
 It follows Apple's [Liquid Glass](https://developer.apple.com/documentation/technologyoverviews/liquid-glass) guidance by using the system tab bar, navigation bar buttons and controls. Glass is kept to navigation and actions; content cards stay solid.
@@ -26,9 +30,11 @@ Not included yet: iCloud sync and automatic iCloud backup (both need a paid Appl
 
 ## Run it
 
-Needs Node 24 or later and Xcode. Expo Go is not enough, because the widget and Face ID need a native build.
+Needs a Mac with Node 24 or later and Xcode. Expo Go is not enough, because the widget and Face ID need a native build.
 
 ```sh
+git clone https://github.com/tnivash/Moneylah-.git
+cd Moneylah-
 npm install
 npm run ios                      # builds and opens the simulator
 EXPO_PUBLIC_DEMO=1 npm run ios   # same, with sample data on a fresh install
@@ -81,3 +87,13 @@ The `ios/` folder is generated from `app.json`, so don't edit it by hand.
 Records are stored in a local SQLite database. The app makes network requests for exchange rates from [Exchange Rate API](https://www.exchangerate-api.com), when you use more than one currency. It sends your main currency code, never your records, and can be turned off under Settings > Currencies and rates. If you set up Google Sheets backup under Settings, it also sends your records to the Apps Script web app in your own Google account. That link and its key stay on the device and are left out of backup files. The app lock hides the screens; it does not add encryption beyond what iOS provides. Backup and CSV files are not encrypted.
 
 Amounts are stored as whole numbers in each currency's smallest unit, to avoid rounding errors.
+
+## Contributing
+
+Bug reports and pull requests are welcome. Read [CONTRIBUTING.md](CONTRIBUTING.md) first. To report a security problem, follow [SECURITY.md](SECURITY.md).
+
+Changes in each version are listed in [CHANGELOG.md](CHANGELOG.md).
+
+## License
+
+[MIT](LICENSE)
