@@ -3,6 +3,7 @@ import { Alert, Linking, Switch } from 'react-native';
 import { Stack } from 'expo-router';
 import { remove, upsert } from '../core/actions';
 import { CURRENCIES } from '../core/money';
+import { formatDateTime } from '../data/preferences';
 import { useRefreshRates } from '../data/rates';
 import { useLedger } from '../data/store';
 import { Card, Chips, confirm, decimalSeparator, Field, Note, Row, Screen } from '../ui/kit';
@@ -13,7 +14,7 @@ export default function Rates() {
   const base = state.settings.baseCurrency;
   const { autoRates, ratesUpdated } = state.settings;
   const refresh = useRefreshRates();
-  const updatedText = ratesUpdated ? `Updated ${new Date(ratesUpdated).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}` : 'Not updated yet';
+  const updatedText = ratesUpdated ? `Updated ${formatDateTime(ratesUpdated)}` : 'Not updated yet';
   /** "1 base in code", as shown on the transaction form. */
   const perBase = (code: string) => {
     const rate = state.rates.find((r) => r.id === code && r.base === base);

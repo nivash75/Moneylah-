@@ -1,6 +1,7 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
+import '../data/preferences';
 import { RatesSync } from '../data/rates';
 import { ReminderSync } from '../data/reminders';
 import { SheetsSync } from '../data/sheets';

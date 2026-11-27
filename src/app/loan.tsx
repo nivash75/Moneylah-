@@ -7,6 +7,7 @@ import { upsert } from '../core/actions';
 import { loanStatus } from '../core/loans';
 import { format, parseAmount, plain } from '../core/money';
 import { account as newAccount } from '../core/seed';
+import { pickerLocale } from '../data/preferences';
 import { allowReminders } from '../data/reminders';
 import { useLedger } from '../data/store';
 import { accountIcon } from '../ui/accounts';
@@ -89,7 +90,7 @@ export default function LoanForm() {
         <Card>
           <Field label={`Amount (${currency})`} value={amountText} onChangeText={setAmountText} keyboardType="decimal-pad" placeholder="0" />
           <Row title="Date">
-            <DateTimePicker value={date} mode="datetime" display="compact" onValueChange={(_, d) => setDate(d)} />
+            <DateTimePicker value={date} mode="datetime" display="compact" locale={pickerLocale()} onValueChange={(_, d) => setDate(d)} />
           </Row>
           {repaying ? null : <DueDate value={dueDate} onChange={setDueDate} from={date} />}
         </Card>

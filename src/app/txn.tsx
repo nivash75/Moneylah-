@@ -6,6 +6,7 @@ import { randomUUID } from 'expo-crypto';
 import { remove, upsert } from '../core/actions';
 import { convertAt, digits, format, parseAmount, plain, rateBetween } from '../core/money';
 import type { TxnKind } from '../core/types';
+import { pickerLocale } from '../data/preferences';
 import { allowReminders } from '../data/reminders';
 import { useLedger } from '../data/store';
 import { accountIcon } from '../ui/accounts';
@@ -182,7 +183,7 @@ export default function TxnForm() {
           {foreign ? rateField : null}
           {foreign ? <Field label={`Value in ${base}`} value={baseShown} onChangeText={typeTarget} keyboardType="decimal-pad" placeholder="0" /> : null}
           <Row title="Date">
-            <DateTimePicker value={date} mode="datetime" display="compact" onValueChange={(_, d) => setDate(d)} />
+            <DateTimePicker value={date} mode="datetime" display="compact" locale={pickerLocale()} onValueChange={(_, d) => setDate(d)} />
           </Row>
         </Card>
         <Card title={kind === 'transfer' ? 'From' : 'Account'}>

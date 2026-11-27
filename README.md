@@ -26,6 +26,8 @@ Clone with `-b Android` to get the Android version.
 - A chosen cycle start day, such as payday, for budgets and monthly totals
 - Multiple currencies with daily exchange rates (or your own), converting as you type
 - Face ID / passcode lock
+- Light, dark or automatic theme, and 12- or 24-hour time
+- Clear all data in one step, keeping your settings
 - Spending analytics by category, with changes, daily averages and subcategories
 - Budget left and a month-end spending projection
 - Excel and CSV export, manual backup to iCloud Drive and restore

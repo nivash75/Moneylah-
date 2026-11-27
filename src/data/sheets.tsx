@@ -4,6 +4,7 @@ import { isScriptUrl, sheetsData } from '../core/googleSheets';
 import type { State } from '../core/types';
 import { crc32 } from '../core/zip';
 import { loadLocal, saveLocal } from './db';
+import { formatDateTime } from './preferences';
 import { useStore } from './store';
 
 export interface SheetsConfig {
@@ -36,7 +37,7 @@ export const useSheetsConfig = () =>
 export function sheetsStatus({ url, lastAt, error }: SheetsConfig) {
   if (!url) return 'Not set up';
   if (error) return 'Last attempt failed';
-  return lastAt ? `Backed up ${new Date(lastAt).toLocaleString(undefined, { day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit' })}` : 'Not backed up yet';
+  return lastAt ? `Backed up ${formatDateTime(lastAt)}` : 'Not backed up yet';
 }
 
 async function send(state: State, force: boolean) {

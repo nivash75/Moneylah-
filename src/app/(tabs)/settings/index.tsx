@@ -1,18 +1,20 @@
-import { Alert, Linking, Switch } from 'react-native';
+import { Alert, Linking, Switch, View } from 'react-native';
 import { router } from 'expo-router';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { fromBackup, toBackup } from '../../../core/backup';
+import { resetData } from '../../../core/actions';
 import { addBillCategories } from '../../../core/billCategories';
 import { localDay, toCsv } from '../../../core/csv';
 import { demoState } from '../../../core/seed';
 import { toSheets } from '../../../core/excel';
 import { toXlsx } from '../../../core/xlsx';
-import { sheetsStatus, useSheetsConfig } from '../../../data/sheets';
+import { clock, setPreferences, usePreferences } from '../../../data/preferences';
+import { setSheetsConfig, sheetsStatus, useSheetsConfig } from '../../../data/sheets';
 import { useLedger } from '../../../data/store';
 import { backupStatus, useDriveBackup } from '../../../ui/driveBackup';
 import { authenticate, canLock } from '../../../ui/LockGate';
-import { Card, confirm, Note, Row, Screen } from '../../../ui/kit';
+import { Button, Card, confirm, Note, Row, Screen, Segmented } from '../../../ui/kit';
 
 const MAX_BACKUP_BYTES = 50 * 1024 * 1024;
 const report = (title: string) => (error: unknown) => Alert.alert(title, error instanceof Error ? error.message : String(error));
@@ -45,6 +47,14 @@ export default function Settings() {
   const today = localDay(Date.now());
   const backUp = useDriveBackup();
   const sheets = useSheetsConfig();
+  const preferences = usePreferences();
+
+  const clearAll = () =>
+    confirm('Clear all data?', 'All transactions, accounts, people, budgets and categories on this device will be deleted, and Google Sheets backup will be turned off. Your settings are kept. This cannot be undone, so share a backup first if you may need it.', 'Clear all', () => {
+      if (!update((s) => addBillCategories(resetData(s)))) return;
+      setSheetsConfig({ url: '', error: '', lastAt: 0, checksum: 0 });
+      Alert.alert('All data cleared');
+    });
 
   // Built when tapped, and async so a failure is reported like the other exports.
   const exportExcel = async () => share(`moneylah-${today}.xlsx`, toXlsx(toSheets(state)), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'org.openxmlformats.spreadsheetml.sheet');
@@ -72,6 +82,16 @@ export default function Settings() {
         <Row icon="cash" title="Currencies and rates" value={settings.baseCurrency} onPress={() => router.push('/rates')} />
         <Row icon="pricetags" title="Categories" onPress={() => router.push('/categories')} />
       </Card>
+      <Card title="Theme">
+        <View style={{ paddingVertical: 8 }}>
+          <Segmented value={preferences.theme} onChange={(theme) => setPreferences({ theme })} options={[{ value: 'auto', label: 'Automatic' }, { value: 'light', label: 'Light' }, { value: 'dark', label: 'Dark' }]} />
+        </View>
+      </Card>
+      <Card title="Time format">
+        <View style={{ paddingVertical: 8 }}>
+          <Segmented value={preferences.clock ?? clock()} onChange={(choice) => setPreferences({ clock: choice })} options={[{ value: '12', label: '12-hour (2:30 PM)' }, { value: '24', label: '24-hour (14:30)' }]} />
+        </View>
+      </Card>
       <Card title="Shortcuts">
         <Row icon="phone-portrait" title="Back Tap to add a transaction" onPress={showBackTapHelp} />
       </Card>
@@ -92,6 +112,7 @@ export default function Settings() {
         <Row icon="cloud-download" title="Restore from backup" onPress={() => void restore().catch(report('Restore failed'))} />
       </Card>
       <Note>Backups are not automatic: tap Back up to iCloud Drive and pick a folder there. To restore, choose that file. Backup files are not encrypted, so keep them somewhere private.</Note>
+      <Button kind="danger" title="Clear all data" onPress={clearAll} />
       {__DEV__ ? (
         <Card title="Development">
           <Row icon="flask" title="Load sample data" onPress={() => confirm('Load sample data?', 'Everything currently in the app will be replaced.', 'Replace', () => { update((s) => addBillCategories({ ...demoState(s.settings.baseCurrency), settings: { ...s.settings, categorySet: 0 } })); })} />
