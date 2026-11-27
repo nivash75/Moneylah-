@@ -36,6 +36,19 @@ test('parseAmount accepts good input and rejects junk', () => {
   assert.equal(parseAmount('1.5', 'JPY'), null);
 });
 
+test('parseAmount rejects misplaced grouping marks instead of dropping them', () => {
+  assert.equal(parseAmount('1,234,567', 'SGD'), 123456700);
+  assert.equal(parseAmount('12,34,567.50', 'INR'), 123456750);
+  assert.equal(parseAmount('-1,250', 'SGD'), -125000);
+  assert.equal(parseAmount('1.234.567,5', 'EUR', ','), 123456750);
+  for (const bad of ['12,50', '1,5', '0,500', ',500', '1,,000', '1,000,', '12,3456', '1.000,5']) {
+    assert.equal(parseAmount(bad, 'SGD'), null, bad);
+  }
+  for (const bad of ['12.50', '1.5', '1,000.5']) {
+    assert.equal(parseAmount(bad, 'EUR', ','), null, bad);
+  }
+});
+
 test('plain and format respect currency decimals', () => {
   assert.equal(plain(5, 'SGD'), '0.05');
   assert.equal(plain(-123450, 'SGD'), '-1234.50');
