@@ -1,10 +1,16 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { convertAt, digits, format, makeConverter, parseAmount, plain, rateBetween } from '../src/core/money.ts';
-import { balance, breakdown, byId, cardStatement, converterFor, endOfDay, forecast, inPeriod, periodDays, periodOf, previousComparable, shift, spent, totals } from '../src/core/ledger.ts';
+import { balance, breakdown, byId, cardStatement, cashInHand, converterFor, endOfDay, forecast, inPeriod, periodDays, periodOf, previousComparable, shift, spent, totals } from '../src/core/ledger.ts';
 import { accountInUse, removeAccount, removeCategory, upsert } from '../src/core/actions.ts';
 import { foreignCurrencies, parseRates } from '../src/core/liveRates.ts';
 import { addBillCategories } from '../src/core/billCategories.ts';
+import { crc32 as zlibCrc } from 'node:zlib';
+import { crc32, zip } from '../src/core/zip.ts';
+import { columnName, serialDate, toXlsx, xmlText } from '../src/core/xlsx.ts';
+import { toSheets } from '../src/core/excel.ts';
+import { dueReminders, isOverdue, loanStatus } from '../src/core/loans.ts';
+import { appsScript, isScriptUrl, sheetsData } from '../src/core/googleSheets.ts';
 import { csvField, localDay, toCsv } from '../src/core/csv.ts';
 import { fromBackup, toBackup } from '../src/core/backup.ts';
 import { account, demoState, initialState } from '../src/core/seed.ts';
@@ -139,6 +145,44 @@ test("today's balance counts all of today and nothing dated later", () => {
   assert.equal(balance(cash, list, today), -1000);
 });
 
+test('repayments settle the oldest loans first and reminders follow what is still open', () => {
+  const s = initialState('SGD');
+  const alex = account('alex', 'Alex', 'person', 'SGD');
+  s.accounts.push(alex);
+  const move = (id: string, from: string, to: string, amount: number, date: number, over: Partial<Txn> = {}) =>
+    txn(id, { kind: 'transfer', accountId: from, toAccountId: to, amount, toAmount: amount, date, ...over });
+  s.txns = [
+    move('a', 'account.bank', 'alex', 5000, day(2026, 11, 1), { loan: 'lend', dueDate: day(2026, 11, 20, 0) }),
+    move('b', 'account.bank', 'alex', 3000, day(2026, 11, 10), { loan: 'lend', dueDate: day(2026, 12, 5, 0) }),
+    move('r', 'alex', 'account.bank', 6000, day(2026, 11, 15), { loan: 'repayment' }),
+  ];
+  const now = day(2026, 11, 27);
+  const status = loanStatus(alex, s.txns, now);
+  assert.equal(status.balance, 2000);
+  assert.deepEqual(status.open.map((d) => [d.txnId, d.amount]), [['b', 2000]]);
+  const [reminder] = dueReminders(s, false, now);
+  assert.equal(reminder.at, day(2026, 12, 5, 9));
+  assert.match(reminder.body, /Alex should return .*20\.00/);
+  assert.doesNotMatch(JSON.stringify(dueReminders(s, true, now)), /Alex|20\.00/);
+  assert.equal(dueReminders(s, false, day(2026, 12, 5, 10)).length, 0);
+  assert.ok(isOverdue(day(2026, 11, 20, 0), now) && !isOverdue(day(2026, 11, 27, 0), now));
+  // Lending is a transfer, so it is neither income nor spending, and money in hand goes down.
+  assert.deepEqual(totals(s.txns, converterFor(s), byId(s.accounts)), { income: 0, expense: 0, unconverted: 0 });
+  assert.equal(cashInHand(s, converterFor(s), now).amount, -2000);
+  assert.deepEqual(fromBackup(toBackup(s)), s);
+});
+
+test('borrowed money is owed back and adds to money in hand', () => {
+  const s = initialState('SGD');
+  const sam = account('sam', 'Sam', 'person', 'SGD');
+  s.accounts.push(sam, account('card', 'Visa', 'card', 'SGD', -700), account('eur', 'Euro', 'cash', 'EUR', 100));
+  s.txns = [txn('a', { kind: 'transfer', accountId: 'sam', toAccountId: 'account.cash', amount: 4000, toAmount: 4000, loan: 'borrow' })];
+  const now = day(2026, 11, 27);
+  assert.equal(loanStatus(sam, s.txns, now).balance, -4000);
+  assert.equal(loanStatus(sam, s.txns, now).open[0].dueDate, null);
+  assert.deepEqual(cashInHand(s, converterFor(s), now), { amount: 4000, unconverted: 1 });
+});
+
 test('unknown rates are reported rather than guessed', () => {
   const s = initialState('SGD');
   s.accounts.push(account('eur', 'Euro', 'cash', 'EUR'));
@@ -215,6 +259,46 @@ test('bill categories are added once, reusing ones the user already has', () => 
   const earlier = { ...trimmed, categories: trimmed.categories.filter((c) => c.name !== 'GrabPayLater'), settings: { ...trimmed.settings, categorySet: 1 } };
   const updated = addBillCategories(earlier);
   assert.deepEqual(updated.categories.slice(earlier.categories.length).map((c) => [c.name, c.parentId]), [['GrabPayLater', 'expense.Installments']]);
+});
+
+test('spreadsheet helpers produce valid names, dates, text and checksums', () => {
+  assert.deepEqual([0, 25, 26, 51, 52].map(columnName), ['A', 'Z', 'AA', 'AZ', 'BA']);
+  assert.equal(serialDate(day(2026, 1, 1)), 46023.5);
+  assert.equal(xmlText('a<b>&"c"\u0001\uD800 😀'), 'a&lt;b&gt;&amp;&quot;c&quot; 😀');
+  const bytes = new TextEncoder().encode('Moneylah! ₹');
+  assert.equal(crc32(bytes), zlibCrc(bytes));
+  const archive = zip([{ name: 'a.txt', text: 'hi' }]);
+  const view = new DataView(archive.buffer);
+  assert.equal(view.getUint32(0, true), 0x04034b50);
+  assert.equal(view.getUint32(archive.length - 22, true), 0x06054b50);
+});
+
+test('the Excel export holds transactions, cycle totals and balances', () => {
+  const s = demoState('SGD', day(2026, 11, 26));
+  s.txns[0].note = '=1+1';
+  const [txns, months, accounts] = toSheets(s, day(2026, 11, 26));
+  assert.equal(txns.rows.length, s.txns.length);
+  assert.ok(txns.rows.some((r) => r[11] === '=1+1'));
+  assert.equal(accounts.rows.length, s.accounts.length);
+  const spentInSheet = months.rows.reduce((a, r) => a + (r[3] as { value: number }).value, 0);
+  const spentInApp = totals(s.txns, converterFor(s), byId(s.accounts)).expense / 100;
+  assert.ok(Math.abs(spentInSheet - spentInApp) < 0.001);
+  assert.ok(toXlsx([txns, months, accounts]).length > 1000);
+  assert.equal(toSheets(initialState('SGD'))[1].rows.length, 0);
+});
+
+test('Google Sheets data is plain values, with formulas neutralised and only script links accepted', () => {
+  const s = demoState('SGD', day(2026, 11, 26));
+  s.txns[0].note = '=IMPORTXML("http://x")';
+  const [txns] = sheetsData(s, day(2026, 11, 26));
+  assert.equal(txns.name, 'Moneylah Transactions');
+  assert.equal(txns.rows.length, s.txns.length + 1);
+  assert.ok(txns.rows.every((r) => r.length === txns.rows[0].length && r.every((v) => typeof v === 'string' || typeof v === 'number')));
+  assert.ok(txns.rows.some((r) => r.includes(`'=IMPORTXML("http://x")`)));
+  assert.ok(isScriptUrl('https://script.google.com/macros/s/AKfy_c-1/exec'));
+  for (const bad of ['http://script.google.com/macros/s/a/exec', 'https://script.google.com.evil.com/macros/s/a/exec', 'https://evil.com/macros/s/a/exec', 'https://script.google.com/macros/s/a/dev']) assert.ok(!isScriptUrl(bad), bad);
+  // The script has to be valid JavaScript.
+  assert.doesNotThrow(() => new Function(appsScript('abc123')));
 });
 
 test('file dates follow the local day, even just after midnight', () => {

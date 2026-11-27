@@ -2,6 +2,8 @@ import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useColorScheme } from 'react-native';
 import { RatesSync } from '../data/rates';
+import { ReminderSync } from '../data/reminders';
+import { SheetsSync } from '../data/sheets';
 import { StoreProvider } from '../data/store';
 import { ShortcutHandler } from '../shortcuts/ShortcutHandler';
 import { LockGate } from '../ui/LockGate';
@@ -23,6 +25,8 @@ export default function RootLayout() {
           <Stack.Screen name="account-form" options={{ ...modal, title: 'Account' }} />
           <Stack.Screen name="category-form" options={{ ...modal, title: 'Category' }} />
           <Stack.Screen name="budget-form" options={{ ...modal, title: 'Budget' }} />
+          <Stack.Screen name="sheets" options={{ title: 'Google Sheets' }} />
+          <Stack.Screen name="loan" options={{ ...modal, title: 'Lend or borrow' }} />
           <Stack.Screen name="cycle-day" options={{ ...modal, title: 'Cycle starts on' }} />
           <Stack.Screen name="account/[id]" options={{ title: 'Account' }} />
           <Stack.Screen name="categories" options={{ title: 'Categories' }} />
@@ -32,6 +36,8 @@ export default function RootLayout() {
         <StatusBar style="auto" />
         <WidgetSync />
         <RatesSync />
+        <ReminderSync />
+        <SheetsSync />
         <ShortcutHandler />
         <LockGate />
       </ThemeProvider>

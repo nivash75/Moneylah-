@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 import { format } from '../core/money';
-import { inPeriod, periodOf, shift, spent, totals } from '../core/ledger';
+import { cashInHand, inPeriod, periodOf, shift, spent, totals } from '../core/ledger';
 import { useLedger } from '../data/store';
 import { periodTitle } from '../ui/periods';
 import MonthWidget from './MonthWidget';
@@ -24,11 +24,16 @@ export function WidgetSync() {
     const hide = state.settings.hideWidgetAmounts;
     const money = (value: number) => (hide ? '••••' : format(value, converter.base));
     const next = shift(month, 1);
+    const inHand = (date: number) => {
+      const cash = cashInHand(state, converter, date);
+      // A partial total would mislead.
+      return cash.unconverted ? 'Rate missing' : money(cash.amount);
+    };
     try {
       MonthWidget.updateTimeline([
-        { date: new Date(), props: { title: periodTitle(month), income: money(sum.income), expense: money(sum.expense), budget: !hide && overall && used !== null && overall.amount > 0 ? used / overall.amount : -1 } },
+        { date: new Date(), props: { title: periodTitle(month), income: money(sum.income), expense: money(sum.expense), budget: !hide && overall && used !== null && overall.amount > 0 ? used / overall.amount : -1, balance: inHand(Date.now()) } },
         // Start the new cycle at zero even if the app isn't opened.
-        { date: new Date(next.start), props: { title: periodTitle(next), income: money(0), expense: money(0), budget: -1 } },
+        { date: new Date(next.start), props: { title: periodTitle(next), income: money(0), expense: money(0), budget: -1, balance: inHand(next.start) } },
       ]);
     } catch (error) {
       console.warn('Widget update failed', error);

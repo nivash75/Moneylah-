@@ -11,13 +11,15 @@ It follows Apple's [Liquid Glass](https://developer.apple.com/documentation/tech
 - Weekly, monthly and yearly statistics
 - Accounts, net worth, credit card statements and payments
 - Monthly budgets
+- Lending and borrowing, with return dates and reminders
 - A chosen cycle start day, such as payday, for budgets and monthly totals
 - Multiple currencies with daily exchange rates (or your own), converting as you type
 - Face ID / passcode lock
 - Spending analytics by category, with changes, daily averages and subcategories
 - Budget left and a month-end spending projection
-- CSV export, manual backup to iCloud Drive and restore
-- Home screen widget for the current month
+- Excel and CSV export, manual backup to iCloud Drive and restore
+- Home screen widget with money in hand and the current cycle
+- Optional automatic copy to your own Google Sheet
 - "Add Transaction" shortcut for Back Tap, the Action button and Siri
 
 Not included yet: iCloud sync and automatic iCloud backup (both need a paid Apple Developer account), and viewing your data on a PC over Wi-Fi.
@@ -76,6 +78,6 @@ The `ios/` folder is generated from `app.json`, so don't edit it by hand.
 
 ## Data and privacy
 
-Records are stored in a local SQLite database. The only network request the app makes is for exchange rates from [Exchange Rate API](https://www.exchangerate-api.com), when you use more than one currency. It sends your main currency code, never your records, and can be turned off under Settings > Currencies and rates. The app lock hides the screens; it does not add encryption beyond what iOS provides. Backup and CSV files are not encrypted.
+Records are stored in a local SQLite database. The app makes network requests for exchange rates from [Exchange Rate API](https://www.exchangerate-api.com), when you use more than one currency. It sends your main currency code, never your records, and can be turned off under Settings > Currencies and rates. If you set up Google Sheets backup under Settings, it also sends your records to the Apps Script web app in your own Google account. That link and its key stay on the device and are left out of backup files. The app lock hides the screens; it does not add encryption beyond what iOS provides. Backup and CSV files are not encrypted.
 
 Amounts are stored as whole numbers in each currency's smallest unit, to avoid rounding errors.

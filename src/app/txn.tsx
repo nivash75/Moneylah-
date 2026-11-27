@@ -6,8 +6,10 @@ import { randomUUID } from 'expo-crypto';
 import { remove, upsert } from '../core/actions';
 import { convertAt, digits, format, parseAmount, plain, rateBetween } from '../core/money';
 import type { TxnKind } from '../core/types';
+import { allowReminders } from '../data/reminders';
 import { useLedger } from '../data/store';
 import { accountIcon } from '../ui/accounts';
+import { DueDate } from '../ui/DueDate';
 import { Button, Card, Chips, confirm, decimalSeparator, Field, Note, Row, Screen, Segmented } from '../ui/kit';
 
 export default function TxnForm() {
@@ -16,7 +18,8 @@ export default function TxnForm() {
   const separator = decimalSeparator();
   const [existing] = useState(() => state.txns.find((t) => t.id === params.id));
   const base = state.settings.baseCurrency;
-  const usable = state.accounts.filter((a) => !a.archived || a.id === existing?.accountId || a.id === existing?.toAccountId);
+  // People appear only on their own loans; new ones are entered through Lend or borrow.
+  const usable = state.accounts.filter((a) => (!a.archived && a.kind !== 'person') || a.id === existing?.accountId || a.id === existing?.toAccountId);
   const payCard = params.payTo ? accounts.get(params.payTo) : undefined;
   const text = (minor: number, accountId?: string | null) => plain(minor, accounts.get(accountId ?? '')?.currency ?? base, separator);
 
@@ -50,6 +53,7 @@ export default function TxnForm() {
   );
   /** True while the amount may be filled in from the other currency, because none was typed. */
   const [amountAuto, setAmountAuto] = useState(() => amountText === '');
+  const [dueDate, setDueDate] = useState<number | null>(existing?.dueDate ?? null);
   const [categoryId, setCategoryId] = useState(existing?.categoryId ?? null);
   const [note, setNote] = useState(existing?.note ?? '');
 
@@ -125,9 +129,13 @@ export default function TxnForm() {
   const remembered = !state.settings.autoRates && !existing && target !== null && unit === base && typedRate !== null && Number.isFinite(typedRate) && typedRate > 0;
   const rateField = target === null ? null : <Field label={`1 ${unit} in ${other}`} value={rateShown()} onChangeText={typeRate} keyboardType="decimal-pad" placeholder="Exchange rate" />;
 
+  const isLoan = kind === 'transfer' && (from?.kind === 'person' || to?.kind === 'person');
+  const canBeDue = isLoan && existing?.loan !== 'repayment';
+
   const save = () => {
     const fail = (message: string) => Alert.alert('Check the details', message);
-    if (!from) return fail('Choose an account.');
+    if (!from || (kind !== 'transfer' && from.kind === 'person')) return fail('Choose an account.');
+    if (canBeDue && dueDate !== null && dueDate < new Date(date).setHours(0, 0, 0, 0)) return fail('The due date is before the date of the loan.');
     if (amount === null || amount <= 0) return fail('Enter an amount greater than zero.');
     let toAmount = 0;
     if (kind === 'transfer') {
@@ -148,10 +156,14 @@ export default function TxnForm() {
         id: existing?.id ?? randomUUID(), kind, date: date.getTime(), amount, toAmount, baseAmount, baseCurrency: base, note: note.trim(),
         accountId: from.id, toAccountId: kind === 'transfer' ? to!.id : null,
         categoryId: kind !== 'transfer' && selected?.kind === kind ? selected.id : null,
+        ...(isLoan && existing?.loan ? { loan: existing.loan } : {}),
+        ...(canBeDue && dueDate !== null ? { dueDate } : {}),
       });
       return remembered ? upsert(next, 'rates', { id: other, base, rate: Number((1 / typedRate!).toPrecision(10)) }) : next;
     });
-    if (saved) router.back();
+    if (!saved) return;
+    if (canBeDue && dueDate !== null) void allowReminders().catch(() => {});
+    router.back();
   };
 
   return (
@@ -193,6 +205,8 @@ export default function TxnForm() {
           </Card>
         )}
         {target !== null && state.settings.autoRates && state.settings.ratesUpdated ? <Note>Rate updated {new Date(state.settings.ratesUpdated).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}. Change it if your bank used a different one.</Note> : null}
+        {canBeDue ? <Card><DueDate value={dueDate} onChange={setDueDate} from={date} /></Card> : null}
+        {kind === 'transfer' && !existing && !payCard ? <Card><Row icon="people" title="Lend or borrow money" subtitle="With a person and a return date" onPress={() => router.replace('/loan')} /></Card> : null}
         {remembered ? <Note>This rate will be saved for your next {other} entries.</Note> : null}
         {payCard && to ? <Note>Still to pay: {format(Number(params.amount), to.currency)}</Note> : null}
         <Card><Field label="Note" value={note} onChangeText={setNote} placeholder="Optional" maxLength={500} /></Card>

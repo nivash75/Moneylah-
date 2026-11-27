@@ -101,6 +101,20 @@ export function balance(account: Account, txns: Txn[], upTo = Infinity): number 
   return total;
 }
 
+/** Money held in cash, bank and savings accounts at the end of the day containing `date`, in the base currency. */
+export function cashInHand(state: State, converter: Converter, date: number): { amount: number; unconverted: number } {
+  const upTo = endOfDay(date);
+  let amount = 0;
+  let unconverted = 0;
+  for (const a of state.accounts) {
+    if (a.archived || !a.includeInTotal || (a.kind !== 'cash' && a.kind !== 'bank' && a.kind !== 'savings')) continue;
+    const value = converter.convert(balance(a, state.txns, upTo), a.currency);
+    if (value === null) unconverted++;
+    else amount += value;
+  }
+  return { amount, unconverted };
+}
+
 /** True when `id` is `ancestor` or sits underneath it. */
 export function isWithin(id: string | null, ancestor: string, categories: Map<string, Category>): boolean {
   const seen = new Set<string>();

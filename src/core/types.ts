@@ -1,7 +1,9 @@
 export type TxnKind = 'expense' | 'income' | 'transfer';
-export type AccountKind = 'cash' | 'bank' | 'card' | 'savings' | 'investment' | 'loan' | 'other';
+/** A 'person' account tracks money lent to (positive) or borrowed from (negative) someone. */
+export type AccountKind = 'cash' | 'bank' | 'card' | 'savings' | 'investment' | 'loan' | 'other' | 'person';
+export type LoanKind = 'lend' | 'borrow' | 'repayment';
 export const TXN_KINDS: TxnKind[] = ['expense', 'income', 'transfer'];
-export const ACCOUNT_KINDS: AccountKind[] = ['cash', 'bank', 'card', 'savings', 'investment', 'loan', 'other'];
+export const ACCOUNT_KINDS: AccountKind[] = ['cash', 'bank', 'card', 'savings', 'investment', 'loan', 'other', 'person'];
 
 export interface Account {
   id: string;
@@ -42,6 +44,10 @@ export interface Txn {
   accountId: string;
   toAccountId: string | null;
   categoryId: string | null;
+  /** Set on transfers to or from a person. */
+  loan?: LoanKind;
+  /** The day a loan should be returned, at local midnight. */
+  dueDate?: number;
 }
 
 export interface Budget {

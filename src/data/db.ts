@@ -6,6 +6,16 @@ const COLLECTIONS = ['accounts', 'categories', 'txns', 'budgets', 'rates'] as co
 const db = openDatabaseSync('pocket-ledger.db');
 db.execSync('CREATE TABLE IF NOT EXISTS records (kind TEXT NOT NULL, id TEXT NOT NULL, json TEXT NOT NULL, PRIMARY KEY (kind, id));');
 
+db.execSync('CREATE TABLE IF NOT EXISTS local (key TEXT PRIMARY KEY, json TEXT NOT NULL);');
+
+/** Settings of this device only: never part of backups or restores. */
+export function loadLocal<T>(key: string): T | null {
+  const row = db.getFirstSync<{ json: string }>('SELECT json FROM local WHERE key = ?', key);
+  return row ? (JSON.parse(row.json) as T) : null;
+}
+export const saveLocal = (key: string, value: unknown) =>
+  void db.runSync('INSERT INTO local (key, json) VALUES (?, ?) ON CONFLICT (key) DO UPDATE SET json = excluded.json', key, JSON.stringify(value));
+
 /** null when nothing has been saved yet. */
 export function loadState(): State | null {
   const rows = db.getAllSync<{ kind: string; json: string }>('SELECT kind, json FROM records ORDER BY rowid');
