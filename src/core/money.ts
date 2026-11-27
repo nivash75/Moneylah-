@@ -22,10 +22,17 @@ export function plain(minor: number, code: string, separator = '.'): string {
   return minor < 0 ? `-${body}` : body;
 }
 
+/** Thousands grouping with commas, including the Indian 12,34,567 style. */
+const GROUPED = /^-?(?:[1-9]\d{0,2}(?:,\d{3})+|[1-9]\d?(?:,\d{2})*,\d{3})$/;
+
 /** Strict parse of typed input. Returns null for junk, too many decimals or absurd sizes. */
 export function parseAmount(input: string, code: string, separator = '.'): number | null {
   const grouping = separator === ',' ? '.' : ',';
-  const text = input.trim().split(grouping).join('').replace(separator, '.');
+  const [head, ...tail] = input.trim().split(separator);
+  const groups = head.split(grouping);
+  // A misplaced mark is likely a mistyped decimal point: dropping it would turn 12,50 into 1250.
+  if (groups.length > 1 && !GROUPED.test(groups.join(','))) return null;
+  const text = [groups.join(''), ...tail].join('.');
   const match = /^(-?)(\d*)(?:\.(\d*))?$/.exec(text);
   if (!match) return null;
   const [, sign, whole, fraction = ''] = match;
