@@ -14,11 +14,13 @@ const amount: Check = (v) => Number.isInteger(v) && Math.abs(v as number) <= MAX
 const int: Check = (v) => Number.isSafeInteger(v);
 const nullableId: Check = (v) => v === null || id(v);
 const oneOf = (...options: string[]): Check => (v) => options.includes(v as string);
+/** Fields added later, which older records don't have. */
+const optional = new Set(['loan', 'dueDate']);
 
 const SCHEMA: Record<'accounts' | 'categories' | 'txns' | 'budgets' | 'rates', Record<string, Check>> = {
   accounts: { id, name: str, kind: oneOf(...ACCOUNT_KINDS), currency: isCurrencyCode, opening: amount, includeInTotal: bool, archived: bool, statementDay: int, paymentDay: int, creditLimit: amount },
   categories: { id, name: str, icon: str, kind: oneOf('expense', 'income'), parentId: nullableId, order: int },
-  txns: { id, kind: oneOf(...TXN_KINDS), date: int, amount, toAmount: amount, baseAmount: amount, baseCurrency: isCurrencyCode, note: str, accountId: id, toAccountId: nullableId, categoryId: nullableId },
+  txns: { id, kind: oneOf(...TXN_KINDS), date: int, amount, toAmount: amount, baseAmount: amount, baseCurrency: isCurrencyCode, note: str, accountId: id, toAccountId: nullableId, categoryId: nullableId, loan: oneOf('lend', 'borrow', 'repayment'), dueDate: int },
   budgets: { id, amount, currency: isCurrencyCode, categoryId: nullableId },
   rates: { id: isCurrencyCode, base: isCurrencyCode, rate: (v) => typeof v === 'number' && Number.isFinite(v) && v > 0 },
 };
@@ -44,6 +46,7 @@ export function fromBackup(text: string): State {
       if (!isObject(item)) return fail(`bad entry in ${name}`);
       const clean: Record<string, unknown> = {};
       for (const [key, check] of Object.entries(fields)) {
+        if (item[key] === undefined && optional.has(key)) continue;
         if (!check(item[key])) fail(`bad ${key} in ${name}`);
         clean[key] = item[key];
       }

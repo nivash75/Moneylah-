@@ -17,6 +17,12 @@
     },
     "plugins": [
       "expo-router",
+      [
+        "expo-notifications",
+        {
+          "enableRemoteNotifications": false
+        }
+      ],
       "expo-sqlite",
       "expo-sharing",
       "expo-status-bar",

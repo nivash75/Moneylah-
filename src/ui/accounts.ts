@@ -8,6 +8,7 @@ const INFO: Record<AccountKind, [string, string]> = {
   investment: ['Investment', 'trending-up'],
   loan: ['Loan', 'receipt'],
   other: ['Other', 'file-tray'],
+  person: ['Lent & borrowed', 'people'],
 };
 export const accountTitle = (kind: AccountKind) => INFO[kind][0];
 export const accountIcon = (kind: AccountKind) => INFO[kind][1];

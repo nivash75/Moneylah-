@@ -6,6 +6,9 @@ import { fromBackup, toBackup } from '../../../core/backup';
 import { addBillCategories } from '../../../core/billCategories';
 import { localDay, toCsv } from '../../../core/csv';
 import { demoState } from '../../../core/seed';
+import { toSheets } from '../../../core/excel';
+import { toXlsx } from '../../../core/xlsx';
+import { sheetsStatus, useSheetsConfig } from '../../../data/sheets';
 import { useLedger } from '../../../data/store';
 import { backupStatus, useDriveBackup } from '../../../ui/driveBackup';
 import { authenticate, canLock } from '../../../ui/LockGate';
@@ -25,11 +28,11 @@ const showBackTapHelp = () =>
   );
 
 /** Shares through a temporary file that is removed afterwards. */
-async function share(name: string, text: string, mimeType: string, UTI: string) {
+async function share(name: string, content: string | Uint8Array, mimeType: string, UTI: string) {
   const file = new File(Paths.cache, name);
   file.create({ overwrite: true });
   try {
-    file.write(text);
+    file.write(content);
     await Sharing.shareAsync(file.uri, { mimeType, UTI });
   } finally {
     if (file.exists) file.delete();
@@ -41,6 +44,10 @@ export default function Settings() {
   const { settings } = state;
   const today = localDay(Date.now());
   const backUp = useDriveBackup();
+  const sheets = useSheetsConfig();
+
+  // Built when tapped, and async so a failure is reported like the other exports.
+  const exportExcel = async () => share(`moneylah-${today}.xlsx`, toXlsx(toSheets(state)), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'org.openxmlformats.spreadsheetml.sheet');
 
   const setLock = async (on: boolean) => {
     if (on && !(await canLock())) return Alert.alert('No device passcode', 'Set up Face ID or a passcode on this device first.');
@@ -77,8 +84,10 @@ export default function Settings() {
         </Row>
       </Card>
       <Card title="Your data">
+        <Row icon="grid" title="Export to Excel" onPress={() => void exportExcel().catch(report('Export failed'))} />
         <Row icon="document-text" title="Export CSV" onPress={() => void share(`moneylah-${today}.csv`, toCsv(state), 'text/csv', 'public.comma-separated-values-text').catch(report('Export failed'))} />
         <Row icon="cloud-upload" title="Back up to iCloud Drive" subtitle={backupStatus(settings.lastBackup)} onPress={backUp} />
+        <Row icon="logo-google" title="Google Sheets backup" subtitle={sheetsStatus(sheets)} onPress={() => router.push('/sheets')} />
         <Row icon="share" title="Share a backup" onPress={() => void share(`moneylah-backup-${today}.json`, toBackup(state), 'application/json', 'public.json').catch(report('Backup failed'))} />
         <Row icon="cloud-download" title="Restore from backup" onPress={() => void restore().catch(report('Restore failed'))} />
       </Card>
