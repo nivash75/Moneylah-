@@ -14,6 +14,20 @@ Notable changes to Moneylah!. Versions follow [Semantic Versioning](https://semv
 - Android uses one currency, without exchange rates
 - Android keeps only the standard categories
 
+## Unreleased
+
+### Added
+
+- Theme setting: automatic, light or dark
+- Time format setting: 12-hour or 24-hour
+- Clear all data, keeping your settings
+
+### Fixed
+
+- Google Sheets backup leaves no old cells behind after a smaller backup
+- Lending to an archived person no longer creates a duplicate
+- Loans dated in the future get their due date reminder straight away
+
 ## [1.1.0] - 2026-11-27
 
 ### Added

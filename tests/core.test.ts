@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { convertAt, digits, format, makeConverter, parseAmount, plain, rateBetween } from '../src/core/money.ts';
 import { balance, breakdown, byId, cardStatement, cashInHand, converterFor, endOfDay, forecast, inPeriod, periodDays, periodOf, previousComparable, shift, spent, totals } from '../src/core/ledger.ts';
-import { accountInUse, removeAccount, removeCategory, upsert } from '../src/core/actions.ts';
+import { accountInUse, removeAccount, removeCategory, resetData, upsert } from '../src/core/actions.ts';
 import { foreignCurrencies, parseRates } from '../src/core/liveRates.ts';
 import { addBillCategories } from '../src/core/billCategories.ts';
 import { crc32 as zlibCrc } from 'node:zlib';
@@ -382,4 +382,16 @@ test('a loan dated in the future still gets its reminder', () => {
   const reminders = dueReminders(state, false, now);
   assert.equal(reminders.length, 1);
   assert.equal(reminders[0].at, new Date(2026, 11, 5, 9).getTime());
+});
+
+test('clearing all data deletes every record but keeps the settings', () => {
+  const start = demoState('SGD');
+  start.settings = { ...start.settings, cycleDay: 25, lockEnabled: true, hideWidgetAmounts: true, lastBackup: 5, categorySet: 2, ratesUpdated: 9 };
+  const cleared = resetData(start);
+  assert.equal(cleared.txns.length, 0);
+  assert.equal(cleared.budgets.length, 0);
+  assert.equal(cleared.rates.length, 0);
+  assert.deepEqual(cleared.accounts.map((a) => a.id), ['account.cash', 'account.bank']);
+  assert.deepEqual(cleared.categories, initialState('SGD').categories);
+  assert.deepEqual(cleared.settings, { ...start.settings, lastBackup: 0, categorySet: 0, ratesUpdated: 0 });
 });

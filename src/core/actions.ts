@@ -1,3 +1,4 @@
+import { initialState } from './seed.ts';
 import type { State } from './types.ts';
 
 type Collection = 'accounts' | 'categories' | 'txns' | 'budgets' | 'rates';
@@ -36,4 +37,10 @@ export function removeCategory(state: State, id: string): State {
     txns: state.txns.map((t) => (t.categoryId && gone.has(t.categoryId) ? { ...t, categoryId: null } : t)),
     budgets: state.budgets.filter((b) => !(b.categoryId && gone.has(b.categoryId))),
   };
+}
+
+/** Deletes every record, as on a fresh install, but keeps the settings. */
+export function resetData(state: State): State {
+  const fresh = initialState(state.settings.baseCurrency);
+  return { ...fresh, settings: { ...state.settings, categorySet: 0, ratesUpdated: 0, lastBackup: 0 } };
 }
