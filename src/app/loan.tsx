@@ -49,12 +49,12 @@ export default function LoanForm() {
     if (amount === null || amount <= 0) return fail('Enter an amount greater than zero.');
     if (repaying && amount > Math.abs(owed)) return fail(`Only ${format(Math.abs(owed), currency)} is outstanding.`);
     if (!repaying && dueDate !== null && dueDate < new Date(date).setHours(0, 0, 0, 0)) return fail('The due date is before the date of the loan.');
-    // The same name in the same currency is the same person.
+    // The same name in the same currency is the same person, even if archived.
     const other = person
-      ?? people.find((p) => p.currency === currency && p.name.trim().toLowerCase() === typed.toLowerCase())
+      ?? state.accounts.find((p) => p.kind === 'person' && p.currency === currency && p.name.trim().toLowerCase() === typed.toLowerCase())
       ?? newAccount(randomUUID(), typed, 'person', currency);
     const saved = update((s) => {
-      const next = accounts.has(other.id) ? s : upsert(s, 'accounts', other);
+      const next = !accounts.has(other.id) || other.archived ? upsert(s, 'accounts', { ...other, archived: false }) : s;
       return upsert(next, 'txns', {
         id: randomUUID(), kind: 'transfer', date: date.getTime(), amount, toAmount: amount,
         baseAmount: converter.convert(amount, currency) ?? 0, baseCurrency: converter.base, note: note.trim(),

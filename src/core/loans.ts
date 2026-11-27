@@ -36,6 +36,8 @@ export const isOverdue = (dueDate: number, now = Date.now()) => endOfDay(dueDate
 export interface Reminder { id: string; at: number; title: string; body: string }
 
 const REMIND_HOUR = 9;
+/** Loans and repayments dated in the future count too, so a reminder exists before the loan date arrives. */
+const AHEAD = 20 * 365 * 86_400_000;
 /** iOS keeps at most 64 pending notifications per app. */
 const LIMIT = 64;
 
@@ -44,7 +46,7 @@ export function dueReminders(state: State, discreet: boolean, now = Date.now()):
   const out: Reminder[] = [];
   for (const person of state.accounts) {
     if (person.kind !== 'person' || person.archived) continue;
-    const status = loanStatus(person, state.txns, now);
+    const status = loanStatus(person, state.txns, now + AHEAD);
     for (const due of status.open) {
       if (due.dueDate === null) continue;
       const at = new Date(due.dueDate).setHours(REMIND_HOUR, 0, 0, 0);
