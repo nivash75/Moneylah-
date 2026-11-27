@@ -73,6 +73,8 @@ The `ios/` folder is generated from `app.json`, so don't edit it by hand.
 
 ## Android
 
+To install without building, download [apk/Moneylah.apk](apk/Moneylah.apk) on your phone, open it and allow the installation. It is version 1.1.0 for 64-bit ARM phones, signed with the debug key, so treat it as a test build.
+
 Needs Android Studio, which provides the Android SDK and Java. The folder path must not contain `!`: Gradle fails to build from such a path.
 
 ```sh
