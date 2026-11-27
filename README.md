@@ -1,7 +1,7 @@
 # Moneylah!
 
-[![CI](https://github.com/tnivash/Moneylah-/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tnivash/Moneylah-/actions/workflows/ci.yml)
-[![Release](https://img.shields.io/github/v/release/tnivash/Moneylah-)](https://github.com/tnivash/Moneylah-/releases/latest)
+[![CI](https://github.com/tnivash/Moneylah/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/tnivash/Moneylah/actions/workflows/ci.yml)
+[![Release](https://img.shields.io/github/v/release/tnivash/Moneylah)](https://github.com/tnivash/Moneylah/releases/latest)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
 A private, on-device income, expense and budget tracker for iPhone and iPad, built with React Native (Expo) and TypeScript.
@@ -33,8 +33,8 @@ Not included yet: iCloud sync and automatic iCloud backup (both need a paid Appl
 Needs a Mac with Node 24 or later and Xcode. Expo Go is not enough, because the widget and Face ID need a native build.
 
 ```sh
-git clone https://github.com/tnivash/Moneylah-.git
-cd Moneylah-
+git clone https://github.com/tnivash/Moneylah.git
+cd Moneylah
 npm install
 npm run ios                      # builds and opens the simulator
 EXPO_PUBLIC_DEMO=1 npm run ios   # same, with sample data on a fresh install
