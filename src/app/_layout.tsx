@@ -1,6 +1,6 @@
 import { DarkTheme, DefaultTheme, Stack, ThemeProvider } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { useColorScheme } from 'react-native';
+import { Platform, useColorScheme } from 'react-native';
 import { RatesSync } from '../data/rates';
 import { ReminderSync } from '../data/reminders';
 import { SheetsSync } from '../data/sheets';
@@ -18,7 +18,7 @@ export default function RootLayout() {
   const modal = { presentation: 'modal' } as const;
   return (
     <StoreProvider>
-      <ThemeProvider value={{ ...base, colors: { ...base.colors, primary: theme.accent, background: theme.bg, text: theme.text, border: theme.line } }}>
+      <ThemeProvider value={{ ...base, colors: { ...base.colors, primary: theme.accent, background: theme.bg, text: theme.text, border: theme.line, ...(Platform.OS === 'android' ? { card: theme.bg } : null) } }}>
         <Stack screenOptions={glassHeader}>
           <Stack.Screen name="(tabs)" options={{ headerShown: false, title: 'Back' }} />
           <Stack.Screen name="txn" options={{ ...modal, title: 'Transaction' }} />

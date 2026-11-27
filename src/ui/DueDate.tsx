@@ -1,5 +1,5 @@
 import { Switch } from 'react-native';
-import DateTimePicker from '@react-native-community/datetimepicker';
+import { DateField } from './DateField';
 import { Row } from './kit';
 
 const WEEK = 7;
@@ -15,7 +15,7 @@ export function DueDate({ value, onChange, from }: { value: number | null; onCha
       </Row>
       {value !== null ? (
         <Row title="Due on">
-          <DateTimePicker value={new Date(value)} minimumDate={new Date(midnight(from.getTime()))} mode="date" display="compact" onValueChange={(_, d) => onChange(midnight(d.getTime()))} />
+          <DateField value={new Date(value)} minimumDate={new Date(midnight(from.getTime()))} mode="date" onChange={(d) => onChange(midnight(d.getTime()))} />
         </Row>
       ) : null}
     </>

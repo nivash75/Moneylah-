@@ -1,10 +1,10 @@
 import { useState } from 'react';
 import { Alert, Linking, Switch } from 'react-native';
-import { Stack } from 'expo-router';
 import { remove, upsert } from '../core/actions';
 import { CURRENCIES } from '../core/money';
 import { useRefreshRates } from '../data/rates';
 import { useLedger } from '../data/store';
+import { HeaderButton } from '../ui/HeaderButton';
 import { Card, Chips, confirm, decimalSeparator, Field, Note, Row, Screen } from '../ui/kit';
 
 export default function Rates() {
@@ -48,9 +48,7 @@ export default function Rates() {
 
   return (
     <Screen>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="checkmark" variant="prominent" accessibilityLabel="Save rates" hidden={autoRates || needed.length === 0} onPress={save} />
-      </Stack.Toolbar>
+      <HeaderButton placement="right" icon="checkmark" label="Save rates" hidden={autoRates || needed.length === 0} onPress={save} />
       <Card title="Main currency">
         <Chips value={base} onChange={changeBase} options={[...new Set([base, ...CURRENCIES])].map((c) => ({ value: c, label: c }))} />
       </Card>

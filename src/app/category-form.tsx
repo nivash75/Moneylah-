@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { randomUUID } from 'expo-crypto';
 import { removeCategory, upsert } from '../core/actions';
 import { useLedger } from '../data/store';
+import { HeaderButton } from '../ui/HeaderButton';
 import { Button, Card, Chips, confirm, Field, Screen } from '../ui/kit';
 
 const ICONS = ['pricetag', 'restaurant', 'cafe', 'cart', 'bag', 'home', 'bus', 'car', 'airplane', 'medkit', 'fitness', 'film', 'game-controller', 'book', 'school', 'gift', 'paw', 'phone-portrait', 'wifi', 'flash', 'shirt', 'briefcase', 'star', 'trending-up', 'add-circle', 'heart', 'receipt', 'calendar', 'cloud', 'business', 'train', 'desktop', 'headset', 'laptop', 'tv', 'water', 'card', 'cash', 'wallet', 'shield-checkmark', 'ellipsis-horizontal-circle'];
@@ -29,12 +30,8 @@ export default function CategoryForm() {
 
   return (
     <>
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="xmark" accessibilityLabel="Cancel" onPress={() => router.back()} />
-      </Stack.Toolbar>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="checkmark" variant="prominent" accessibilityLabel="Save" onPress={save} />
-      </Stack.Toolbar>
+      <HeaderButton placement="left" icon="xmark" label="Cancel" onPress={() => router.back()} />
+      <HeaderButton placement="right" icon="checkmark" label="Save" onPress={save} />
       <Screen>
         <Card><Field label="Name" value={name} onChangeText={setName} maxLength={40} placeholder={kind === 'income' ? 'Income category' : 'Expense category'} /></Card>
         {!hasChildren ? (

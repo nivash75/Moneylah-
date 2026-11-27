@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Alert } from 'react-native';
 import { router, Stack, useLocalSearchParams } from 'expo-router';
-import DateTimePicker from '@react-native-community/datetimepicker';
 import { randomUUID } from 'expo-crypto';
 import { upsert } from '../core/actions';
 import { loanStatus } from '../core/loans';
@@ -9,6 +8,8 @@ import { format, parseAmount, plain } from '../core/money';
 import { account as newAccount } from '../core/seed';
 import { allowReminders } from '../data/reminders';
 import { useLedger } from '../data/store';
+import { DateField } from '../ui/DateField';
+import { HeaderButton } from '../ui/HeaderButton';
 import { accountIcon } from '../ui/accounts';
 import { DueDate } from '../ui/DueDate';
 import { Card, Chips, decimalSeparator, Field, Note, Row, Screen, Segmented } from '../ui/kit';
@@ -71,12 +72,8 @@ export default function LoanForm() {
 
   return (
     <>
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="xmark" accessibilityLabel="Cancel" onPress={() => router.back()} />
-      </Stack.Toolbar>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="checkmark" variant="prominent" accessibilityLabel="Save" onPress={save} />
-      </Stack.Toolbar>
+      <HeaderButton placement="left" icon="xmark" label="Cancel" onPress={() => router.back()} />
+      <HeaderButton placement="right" icon="checkmark" label="Save" onPress={save} />
       <Screen>
         <Stack.Screen options={{ title }} />
         {repaying ? null : <Segmented value={type} onChange={setType} options={[{ value: 'lend', label: 'I lend' }, { value: 'borrow', label: 'I borrow' }]} />}
@@ -89,7 +86,7 @@ export default function LoanForm() {
         <Card>
           <Field label={`Amount (${currency})`} value={amountText} onChangeText={setAmountText} keyboardType="decimal-pad" placeholder="0" />
           <Row title="Date">
-            <DateTimePicker value={date} mode="datetime" display="compact" onValueChange={(_, d) => setDate(d)} />
+            <DateField value={date} mode="datetime" onChange={setDate} />
           </Row>
           {repaying ? null : <DueDate value={dueDate} onChange={setDueDate} from={date} />}
         </Card>

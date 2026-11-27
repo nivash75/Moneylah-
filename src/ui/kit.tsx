@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState, type ComponentProps, type ComponentRef, type ComponentType, type ReactNode } from 'react';
-import { Alert, Dimensions, Keyboard, Pressable, ScrollView, StyleSheet, Text, TextInput, useColorScheme, View, type TextInputProps } from 'react-native';
+import { Alert, Dimensions, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useColorScheme, View, type TextInputProps } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import NativeSegmentedControl, { type SegmentedControlProps } from '@react-native-segmented-control/segmented-control';
 import { getLocales } from 'expo-localization';
@@ -37,8 +37,9 @@ export function Screen({ children }: { children: ReactNode }) {
   // Not automaticallyAdjustKeyboardInsets: on sheets it scrolls the top of the form under the header.
   useEffect(() => {
     const subs = [
-      Keyboard.addListener('keyboardWillShow', (e) => setKeyboard(e.endCoordinates.height)),
-      Keyboard.addListener('keyboardWillHide', () => setKeyboard(0)),
+      // Android reports only after the keyboard has moved.
+      Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow', (e) => setKeyboard(e.endCoordinates.height)),
+      Keyboard.addListener(Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide', () => setKeyboard(0)),
       // Scroll only if the keyboard hides the field being typed in.
       Keyboard.addListener('keyboardDidShow', (e) => {
         const field = TextInput.State.currentlyFocusedInput();
@@ -128,7 +129,7 @@ export function Field({ label, ...input }: { label: string } & TextInputProps) {
   return (
     <View style={styles.row}>
       <T>{label}</T>
-      <TextInput accessibilityLabel={label} placeholderTextColor={theme.dim} {...input} style={[styles.input, { color: theme.text }]} />
+      <TextInput accessibilityLabel={label} placeholderTextColor={theme.dim} underlineColorAndroid="transparent" {...input} style={[styles.input, { color: theme.text }]} />
     </View>
   );
 }

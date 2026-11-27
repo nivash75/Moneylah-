@@ -1,9 +1,10 @@
 import { Pressable, View } from 'react-native';
-import { router, Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { categoryName, forecast, isWithin, spent } from '../../../core/ledger';
 import { format } from '../../../core/money';
 import type { Txn } from '../../../core/types';
 import { useLedger } from '../../../data/store';
+import { HeaderButton } from '../../../ui/HeaderButton';
 import { Bar, Card, Note, Row, Screen, Stepper, T, useTheme } from '../../../ui/kit';
 import { Outlook } from '../../../ui/Outlook';
 import { dayMonth, periodTitle, usePeriod } from '../../../ui/periods';
@@ -16,9 +17,7 @@ export default function Budgets() {
 
   return (
     <>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="plus" accessibilityLabel="Add budget" onPress={() => router.push('/budget-form')} />
-      </Stack.Toolbar>
+      <HeaderButton placement="right" icon="plus" label="Add budget" onPress={() => router.push('/budget-form')} />
       <Screen>
         <Card>
           <Row icon="calendar" title="Cycle starts on" subtitle="Monthly totals reset on this day" value={`Day ${state.settings.cycleDay}`} onPress={() => router.push('/cycle-day')} />

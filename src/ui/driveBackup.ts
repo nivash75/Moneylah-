@@ -1,4 +1,4 @@
-import { Alert } from 'react-native';
+import { Alert, Platform } from 'react-native';
 import { Directory, File } from 'expo-file-system';
 import { toBackup } from '../core/backup';
 import { localDay } from '../core/csv';
@@ -27,12 +27,20 @@ export function useDriveBackup() {
       throw error;
     }
     const now = new Date();
-    const file = new File(folder, `moneylah-backup-${localDay(now.getTime())}.json`);
-    file.create({ overwrite: true });
+    const name = `moneylah-backup-${localDay(now.getTime())}.json`;
+    let file: File;
+    // Android folders are opened by permission, so the folder itself has to create the file.
+    if (Platform.OS === 'android') file = folder.createFile(name, 'application/json');
+    else {
+      file = new File(folder, name);
+      file.create({ overwrite: true });
+    }
     file.write(toBackup(state));
     update((s) => ({ ...s, settings: { ...s.settings, lastBackup: now.getTime() } }));
+    // Android renames a second backup made the same day, so report the name it actually used.
+    if (Platform.OS === 'android') Alert.alert('Backup saved', `${decodeURIComponent(file.uri).split('/').pop()} was saved in the folder you picked.`);
     // iCloud Drive folders live under "Mobile Documents".
-    if (decodeURIComponent(folder.uri).includes('/Mobile Documents/')) Alert.alert('Saved to iCloud Drive', `${file.name} uploads when this device is online.`);
+    else if (decodeURIComponent(folder.uri).includes('/Mobile Documents/')) Alert.alert('Saved to iCloud Drive', `${file.name} uploads when this device is online.`);
     else Alert.alert('Backup saved', `${file.name} was saved, but that folder isn't in iCloud Drive. To keep a copy in iCloud, back up again and pick an iCloud Drive folder.`);
   };
 

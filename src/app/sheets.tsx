@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert, Share } from 'react-native';
+import { Alert, Platform, Share } from 'react-native';
 import { randomUUID } from 'expo-crypto';
 import { appsScript, isScriptUrl } from '../core/googleSheets';
 import { backUpToSheets, setSheetsConfig, sheetsStatus, useSheetsConfig } from '../data/sheets';
@@ -34,7 +34,7 @@ export default function GoogleSheets() {
     <Screen>
       <Note>Your transactions, notes and account balances are copied to a spreadsheet in your own Google account, shortly after you change them while the app is open.</Note>
       <Card title="1. Add the script">
-        <Row icon="share" title="Share the script" subtitle="Send it to your computer, for example by AirDrop" onPress={() => void Share.share({ message: appsScript(config.secret) }).catch(() => {})} />
+        <Row icon="share" title="Share the script" subtitle={Platform.OS === 'ios' ? 'Send it to your computer, for example by AirDrop' : 'Send it to your computer'} onPress={() => void Share.share({ message: appsScript(config.secret) }).catch(() => {})} />
       </Card>
       <Note>On a computer, create a new Google Sheet. Open Extensions &gt; Apps Script, replace everything with this script and save. Choose Deploy &gt; New deployment &gt; Web app, set Execute as to Me and Who has access to Anyone, then Deploy and allow access. Copy the Web app URL.</Note>
       <Card title="2. Paste the web app URL">
@@ -46,7 +46,7 @@ export default function GoogleSheets() {
           <Row icon={config.error ? 'alert-circle' : 'checkmark-circle'} title={sheetsStatus(config)} subtitle={config.error || undefined} />
         </Card>
       ) : null}
-      <Note>Each backup replaces the three Moneylah! tabs; use File &gt; Version history in Google Sheets to see earlier copies. It can't be restored into the app, so keep using iCloud Drive backups for that. Keep the script and link private.</Note>
+      <Note>Each backup replaces the three Moneylah! tabs; use File &gt; Version history in Google Sheets to see earlier copies. It can't be restored into the app, so keep using backup files for that. Keep the script and link private.</Note>
       {config.url ? <Button kind="danger" title="Disconnect" onPress={() => confirm('Stop backing up?', 'Your spreadsheet is kept. Delete the deployment in Apps Script to disable the link.', 'Disconnect', () => { setUrl(''); setSheetsConfig({ url: '', error: '', lastAt: 0, checksum: 0 }); })} /> : null}
     </Screen>
   );

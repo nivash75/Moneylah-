@@ -1,6 +1,6 @@
 # Moneylah!
 
-A private, on-device income, expense and budget tracker for iPhone and iPad, built with React Native (Expo) and TypeScript.
+A private, on-device income, expense and budget tracker for iPhone, iPad and Android, built with React Native (Expo) and TypeScript.
 
 It follows Apple's [Liquid Glass](https://developer.apple.com/documentation/technologyoverviews/liquid-glass) guidance by using the system tab bar, navigation bar buttons and controls. Glass is kept to navigation and actions; content cards stay solid.
 
@@ -14,7 +14,7 @@ It follows Apple's [Liquid Glass](https://developer.apple.com/documentation/tech
 - Lending and borrowing, with return dates and reminders
 - A chosen cycle start day, such as payday, for budgets and monthly totals
 - Multiple currencies with daily exchange rates (or your own), converting as you type
-- Face ID / passcode lock
+- Face ID / passcode lock (fingerprint or screen lock on Android)
 - Spending analytics by category, with changes, daily averages and subcategories
 - Budget left and a month-end spending projection
 - Excel and CSV export, manual backup to iCloud Drive and restore
@@ -65,7 +65,25 @@ With a free Apple account the install stops opening after 7 days. Run step 4 aga
 
 The `ios/` folder is generated from `app.json`, so don't edit it by hand.
 
+## Android
+
+Needs Android Studio, which provides the Android SDK and Java. The folder path must not contain `!`: Gradle fails to build from such a path.
+
+```sh
+npx expo prebuild --platform android   # creates android/
+npm run android                        # builds and runs on an emulator or phone
+cd android && ./gradlew app:assembleRelease   # makes an installable APK
+```
+
+The APK is written to `android/app/build/outputs/apk/release/`. It is signed with the debug key, which is fine for installing on your own phone but not for Google Play.
+
+Android has no "Add Transaction" shortcut or iCloud Drive; backups are saved to a folder you pick. The Android widget updates only when the app is open, so a new cycle or a light/dark change appears after you next open it. Due date reminders can arrive up to an hour after 9:00 am. The app switcher may show your screens even when app lock is on.
+
+The `android/` folder is generated from `app.json`, so don't edit it by hand.
+
 ## Layout
+
+Files ending in `.android.ts(x)` replace the file of the same name on Android.
 
 | Folder        | Contents                                   |
 | ------------- | ------------------------------------------ |
@@ -78,6 +96,6 @@ The `ios/` folder is generated from `app.json`, so don't edit it by hand.
 
 ## Data and privacy
 
-Records are stored in a local SQLite database. The app makes network requests for exchange rates from [Exchange Rate API](https://www.exchangerate-api.com), when you use more than one currency. It sends your main currency code, never your records, and can be turned off under Settings > Currencies and rates. If you set up Google Sheets backup under Settings, it also sends your records to the Apps Script web app in your own Google account. That link and its key stay on the device and are left out of backup files. The app lock hides the screens; it does not add encryption beyond what iOS provides. Backup and CSV files are not encrypted.
+Records are stored in a local SQLite database. The app makes network requests for exchange rates from [Exchange Rate API](https://www.exchangerate-api.com), when you use more than one currency. It sends your main currency code, never your records, and can be turned off under Settings > Currencies and rates. If you set up Google Sheets backup under Settings, it also sends your records to the Apps Script web app in your own Google account. That link and its key stay on the device and are left out of backup files. The app lock hides the screens; it does not add encryption beyond what the device provides. Backup and CSV files are not encrypted.
 
 Amounts are stored as whole numbers in each currency's smallest unit, to avoid rounding errors.

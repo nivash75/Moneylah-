@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Alert } from 'react-native';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { randomUUID } from 'expo-crypto';
 import { remove, upsert } from '../core/actions';
 import { categoryName } from '../core/ledger';
 import { parseAmount, plain } from '../core/money';
 import { useLedger } from '../data/store';
+import { HeaderButton } from '../ui/HeaderButton';
 import { Button, Card, Chips, confirm, decimalSeparator, Field, Note, Screen } from '../ui/kit';
 
 export default function BudgetForm() {
@@ -31,12 +32,8 @@ export default function BudgetForm() {
 
   return (
     <>
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="xmark" accessibilityLabel="Cancel" onPress={() => router.back()} />
-      </Stack.Toolbar>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="checkmark" variant="prominent" accessibilityLabel="Save" onPress={save} />
-      </Stack.Toolbar>
+      <HeaderButton placement="left" icon="xmark" label="Cancel" onPress={() => router.back()} />
+      <HeaderButton placement="right" icon="checkmark" label="Save" onPress={save} />
       <Screen>
         <Card><Field label={`Monthly limit (${currency})`} value={text} onChangeText={setText} keyboardType="decimal-pad" placeholder="0" autoFocus={!existing} /></Card>
         <Card title="Applies to"><Chips value={categoryId} onChange={setCategoryId} options={options} /></Card>

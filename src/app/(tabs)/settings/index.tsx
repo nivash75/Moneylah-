@@ -1,4 +1,4 @@
-import { Alert, Linking, Switch } from 'react-native';
+import { Alert, Linking, Platform, Switch } from 'react-native';
 import { router } from 'expo-router';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
@@ -15,6 +15,8 @@ import { authenticate, canLock } from '../../../ui/LockGate';
 import { Card, confirm, Note, Row, Screen } from '../../../ui/kit';
 
 const MAX_BACKUP_BYTES = 50 * 1024 * 1024;
+const ios = Platform.OS === 'ios';
+const backupTitle = ios ? 'Back up to iCloud Drive' : 'Back up to a folder';
 const report = (title: string) => (error: unknown) => Alert.alert(title, error instanceof Error ? error.message : String(error));
 
 const showBackTapHelp = () =>
@@ -35,7 +37,8 @@ async function share(name: string, content: string | Uint8Array, mimeType: strin
     file.write(content);
     await Sharing.shareAsync(file.uri, { mimeType, UTI });
   } finally {
-    if (file.exists) file.delete();
+    // Android apps may read the file after sharing returns; it stays in the app's private cache.
+    if (ios && file.exists) file.delete();
   }
 }
 
@@ -50,7 +53,7 @@ export default function Settings() {
   const exportExcel = async () => share(`moneylah-${today}.xlsx`, toXlsx(toSheets(state)), 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet', 'org.openxmlformats.spreadsheetml.sheet');
 
   const setLock = async (on: boolean) => {
-    if (on && !(await canLock())) return Alert.alert('No device passcode', 'Set up Face ID or a passcode on this device first.');
+    if (on && !(await canLock())) return Alert.alert('No device passcode', ios ? 'Set up Face ID or a passcode on this device first.' : 'Set up a screen lock on this device first.');
     if (!(await authenticate())) return;
     update((s) => ({ ...s, settings: { ...s.settings, lockEnabled: on, hideWidgetAmounts: on ? true : s.settings.hideWidgetAmounts } }));
   };
@@ -72,11 +75,13 @@ export default function Settings() {
         <Row icon="cash" title="Currencies and rates" value={settings.baseCurrency} onPress={() => router.push('/rates')} />
         <Row icon="pricetags" title="Categories" onPress={() => router.push('/categories')} />
       </Card>
-      <Card title="Shortcuts">
-        <Row icon="phone-portrait" title="Back Tap to add a transaction" onPress={showBackTapHelp} />
-      </Card>
+      {ios ? (
+        <Card title="Shortcuts">
+          <Row icon="phone-portrait" title="Back Tap to add a transaction" onPress={showBackTapHelp} />
+        </Card>
+      ) : null}
       <Card title="Privacy">
-        <Row icon="lock-closed" title="Lock with Face ID or passcode">
+        <Row icon="lock-closed" title={ios ? 'Lock with Face ID or passcode' : 'Lock with fingerprint or screen lock'}>
           <Switch accessibilityLabel="App lock" value={settings.lockEnabled} onValueChange={(on) => void setLock(on).catch(report('Could not change app lock'))} />
         </Row>
         <Row icon="eye-off" title="Hide amounts in widget">
@@ -86,12 +91,12 @@ export default function Settings() {
       <Card title="Your data">
         <Row icon="grid" title="Export to Excel" onPress={() => void exportExcel().catch(report('Export failed'))} />
         <Row icon="document-text" title="Export CSV" onPress={() => void share(`moneylah-${today}.csv`, toCsv(state), 'text/csv', 'public.comma-separated-values-text').catch(report('Export failed'))} />
-        <Row icon="cloud-upload" title="Back up to iCloud Drive" subtitle={backupStatus(settings.lastBackup)} onPress={backUp} />
+        <Row icon="cloud-upload" title={backupTitle} subtitle={backupStatus(settings.lastBackup)} onPress={backUp} />
         <Row icon="logo-google" title="Google Sheets backup" subtitle={sheetsStatus(sheets)} onPress={() => router.push('/sheets')} />
         <Row icon="share" title="Share a backup" onPress={() => void share(`moneylah-backup-${today}.json`, toBackup(state), 'application/json', 'public.json').catch(report('Backup failed'))} />
         <Row icon="cloud-download" title="Restore from backup" onPress={() => void restore().catch(report('Restore failed'))} />
       </Card>
-      <Note>Backups are not automatic: tap Back up to iCloud Drive and pick a folder there. To restore, choose that file. Backup files are not encrypted, so keep them somewhere private.</Note>
+      <Note>Backups are not automatic: tap {backupTitle} and pick {ios ? 'a folder there' : 'where to save it'}. To restore, choose that file. Backup files are not encrypted, so keep them somewhere private.</Note>
       {__DEV__ ? (
         <Card title="Development">
           <Row icon="flask" title="Load sample data" onPress={() => confirm('Load sample data?', 'Everything currently in the app will be replaced.', 'Replace', () => { update((s) => addBillCategories({ ...demoState(s.settings.baseCurrency), settings: { ...s.settings, categorySet: 0 } })); })} />

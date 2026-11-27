@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { Alert, Switch } from 'react-native';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { randomUUID } from 'expo-crypto';
 import { accountInUse, removeAccount, upsert } from '../core/actions';
 import { CURRENCIES, parseAmount, plain } from '../core/money';
 import { ACCOUNT_KINDS, type AccountKind } from '../core/types';
 import { useLedger } from '../data/store';
+import { HeaderButton } from '../ui/HeaderButton';
 import { accountIcon, accountTitle } from '../ui/accounts';
 import { Button, Card, Chips, confirm, decimalSeparator, Field, Note, Row, Screen } from '../ui/kit';
 
@@ -48,12 +49,8 @@ export default function AccountForm() {
 
   return (
     <>
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="xmark" accessibilityLabel="Cancel" onPress={() => router.back()} />
-      </Stack.Toolbar>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="checkmark" variant="prominent" accessibilityLabel="Save" onPress={save} />
-      </Stack.Toolbar>
+      <HeaderButton placement="left" icon="xmark" label="Cancel" onPress={() => router.back()} />
+      <HeaderButton placement="right" icon="checkmark" label="Save" onPress={save} />
       <Screen>
         <Card><Field label="Name" value={name} onChangeText={setName} placeholder="e.g. Savings" maxLength={60} /></Card>
         <Card title="Type"><Chips value={kind} onChange={setKind} options={ACCOUNT_KINDS.map((k) => ({ value: k, label: accountTitle(k), icon: accountIcon(k) }))} /></Card>

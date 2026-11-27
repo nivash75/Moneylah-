@@ -1,9 +1,10 @@
-import { router, Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { balance, endOfDay } from '../../../core/ledger';
 import { isOverdue, loanStatus } from '../../../core/loans';
 import { format } from '../../../core/money';
 import { ACCOUNT_KINDS } from '../../../core/types';
 import { useLedger } from '../../../data/store';
+import { HeaderButton } from '../../../ui/HeaderButton';
 import { accountIcon, accountTitle } from '../../../ui/accounts';
 import { Card, Note, Row, Screen, useTheme } from '../../../ui/kit';
 import { SummaryRow } from '../../../ui/TxnRow';
@@ -41,9 +42,7 @@ export default function Accounts() {
 
   return (
     <>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="plus" accessibilityLabel="Add account" onPress={() => router.push('/account-form')} />
-      </Stack.Toolbar>
+      <HeaderButton placement="right" icon="plus" label="Add account" onPress={() => router.push('/account-form')} />
       <Screen>
         <Card>
           <SummaryRow items={[

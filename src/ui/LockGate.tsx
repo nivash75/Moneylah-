@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Alert, AppState, Keyboard, StyleSheet, View } from 'react-native';
 import * as LocalAuthentication from 'expo-local-authentication';
-import { FullWindowOverlay } from 'react-native-screens';
 import { useStore } from '../data/store';
 import { Button, Icon, T, useTheme } from './kit';
+import { Overlay } from './Overlay';
 
 export const canLock = async () => (await LocalAuthentication.getEnrolledLevelAsync()) !== LocalAuthentication.SecurityLevel.NONE;
 export const authenticate = async () => (await LocalAuthentication.authenticateAsync({ promptMessage: 'Unlock your records' })).success;
@@ -62,13 +62,13 @@ export function LockGate() {
 
   if (!enabled || (!locked && appState === 'active')) return null;
   return (
-    <FullWindowOverlay>
+    <Overlay>
       <View accessibilityViewIsModal style={[StyleSheet.absoluteFill, styles.cover, { backgroundColor: theme.bg }]}>
         <Icon name="lock-closed" size={48} />
         <T bold size={22}>Moneylah! is locked</T>
         {locked ? <View style={{ width: 200 }}><Button title="Unlock" onPress={() => void unlock()} /></View> : null}
       </View>
-    </FullWindowOverlay>
+    </Overlay>
   );
 }
 
