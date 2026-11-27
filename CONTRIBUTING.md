@@ -8,7 +8,7 @@ For security problems, follow [SECURITY.md](SECURITY.md) instead.
 
 ## Change the code
 
-1. Fork the repository and create a branch from `main`.
+1. Fork the repository and create a branch from `ios`, or from `Android` for Android changes.
 2. Install with `npm ci`. You need Node 24 or later; running the app also needs a Mac with Xcode (see the [README](README.md#run-it)).
 3. Make one focused change. For large changes, open an issue first.
 4. Keep logic in `src/core` free of React Native imports, and add tests for it in `tests`.
@@ -25,5 +25,5 @@ For maintainers:
 
 1. Set the new version in `package.json`, `package-lock.json` and `app.json`.
 2. Add the changes to `CHANGELOG.md`.
-3. Merge into `main` once the checks pass.
-4. Publish a GitHub release with a new tag, such as `v1.1.1`, on `main`.
+3. Merge into `ios` once the checks pass.
+4. Publish a GitHub release with a new tag, such as `v1.1.1`, on `ios`.
