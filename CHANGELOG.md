@@ -20,5 +20,5 @@ Notable changes to Moneylah!. Versions follow [Semantic Versioning](https://semv
 
 First release: expenses, income and transfers, accounts and credit cards, budgets, statistics and analytics, multiple currencies, app lock, CSV export, backup and restore, a home screen widget and an "Add Transaction" shortcut.
 
-[1.1.0]: https://github.com/tnivash/Moneylah-/compare/v1.0.0...v1.1.0
-[1.0.0]: https://github.com/tnivash/Moneylah-/releases/tag/v1.0.0
+[1.1.0]: https://github.com/tnivash/Moneylah/compare/v1.0.0...v1.1.0
+[1.0.0]: https://github.com/tnivash/Moneylah/releases/tag/v1.0.0
