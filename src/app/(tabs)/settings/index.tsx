@@ -1,18 +1,21 @@
-import { Alert, Linking, Platform, Switch } from 'react-native';
+import { Alert, Linking, Platform } from 'react-native';
 import { router } from 'expo-router';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { fromBackup, toBackup } from '../../../core/backup';
 import { localDay, toCsv } from '../../../core/csv';
 import { demoState } from '../../../core/seed';
+import { otherCurrencies, toSingleCurrency } from '../../../core/singleCurrency';
 import { toSheets } from '../../../core/excel';
 import { toXlsx } from '../../../core/xlsx';
 import { addExtraCategories } from '../../../data/extraCategories';
+import { multiCurrency } from '../../../data/features';
 import { sheetsStatus, useSheetsConfig } from '../../../data/sheets';
 import { useLedger } from '../../../data/store';
 import { backupStatus, useDriveBackup } from '../../../ui/driveBackup';
 import { authenticate, canLock } from '../../../ui/LockGate';
 import { Card, confirm, Note, Row, Screen } from '../../../ui/kit';
+import { Toggle } from '../../../ui/Toggle';
 
 const MAX_BACKUP_BYTES = 50 * 1024 * 1024;
 const ios = Platform.OS === 'ios';
@@ -62,7 +65,9 @@ export default function Settings() {
     const picked = await File.pickFileAsync({ mimeTypes: 'application/json' });
     if (picked.canceled) return;
     if (picked.result.size > MAX_BACKUP_BYTES) throw new Error('The file is too large to be a backup.');
-    const restored = fromBackup(await picked.result.text());
+    const backup = fromBackup(await picked.result.text());
+    const restored = multiCurrency ? backup : toSingleCurrency(backup);
+    if (!restored) throw new Error(`This backup uses more than one currency (${[...new Set([backup.settings.baseCurrency, ...otherCurrencies(backup)])].join(', ')}). This app uses only one, so it can't restore it.`);
     confirm('Replace all data?', `The backup holds ${restored.txns.length} transactions. Everything currently in the app will be deleted.`, 'Replace', () => {
       // The app lock and backup date stay as they are on this device.
       if (update((s) => addExtraCategories({ ...restored, settings: { ...restored.settings, lockEnabled: s.settings.lockEnabled, lastBackup: s.settings.lastBackup } }))) Alert.alert('Backup restored');
@@ -72,7 +77,7 @@ export default function Settings() {
   return (
     <Screen>
       <Card title="Money">
-        <Row icon="cash" title="Currencies and rates" value={settings.baseCurrency} onPress={() => router.push('/rates')} />
+        <Row icon="cash" title={multiCurrency ? 'Currencies and rates' : 'Currency'} value={settings.baseCurrency} onPress={() => router.push('/rates')} />
         <Row icon="pricetags" title="Categories" onPress={() => router.push('/categories')} />
       </Card>
       {ios ? (
@@ -82,10 +87,10 @@ export default function Settings() {
       ) : null}
       <Card title="Privacy">
         <Row icon="lock-closed" title={ios ? 'Lock with Face ID or passcode' : 'Lock with fingerprint or screen lock'}>
-          <Switch accessibilityLabel="App lock" value={settings.lockEnabled} onValueChange={(on) => void setLock(on).catch(report('Could not change app lock'))} />
+          <Toggle accessibilityLabel="App lock" value={settings.lockEnabled} onValueChange={(on) => void setLock(on).catch(report('Could not change app lock'))} />
         </Row>
         <Row icon="eye-off" title="Hide amounts in widget">
-          <Switch accessibilityLabel="Hide amounts in widget" value={settings.hideWidgetAmounts} onValueChange={(on) => { update((s) => ({ ...s, settings: { ...s.settings, hideWidgetAmounts: on } })); }} />
+          <Toggle accessibilityLabel="Hide amounts in widget" value={settings.hideWidgetAmounts} onValueChange={(on) => { update((s) => ({ ...s, settings: { ...s.settings, hideWidgetAmounts: on } })); }} />
         </Row>
       </Card>
       <Card title="Your data">

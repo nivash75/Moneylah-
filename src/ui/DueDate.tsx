@@ -1,6 +1,6 @@
-import { Switch } from 'react-native';
 import { DateField } from './DateField';
 import { Row } from './kit';
+import { Toggle } from './Toggle';
 
 const WEEK = 7;
 const midnight = (ms: number) => new Date(ms).setHours(0, 0, 0, 0);
@@ -11,7 +11,7 @@ export function DueDate({ value, onChange, from }: { value: number | null; onCha
   return (
     <>
       <Row title="Return due date" subtitle="Reminds you at 9:00 am">
-        <Switch accessibilityLabel="Return due date" value={value !== null} onValueChange={(on) => onChange(on ? suggested() : null)} />
+        <Toggle accessibilityLabel="Return due date" value={value !== null} onValueChange={(on) => onChange(on ? suggested() : null)} />
       </Row>
       {value !== null ? (
         <Row title="Due on">

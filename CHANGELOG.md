@@ -2,6 +2,18 @@
 
 Notable changes to Moneylah!. Versions follow [Semantic Versioning](https://semver.org).
 
+## Unreleased (Android)
+
+### Added
+
+- An Android app, including the home screen widget, as a test APK
+- iPhone-style large titles, round buttons, floating tab bar, switches and sheets on Android
+
+### Changed
+
+- Android uses one currency, without exchange rates
+- Android keeps only the standard categories
+
 ## [1.1.0] - 2026-11-27
 
 ### Added

@@ -4,14 +4,17 @@ import { getLocales } from 'expo-localization';
 import type { State } from '../core/types';
 import { demoState, initialState } from '../core/seed';
 import { byId, converterFor } from '../core/ledger';
+import { toSingleCurrency } from '../core/singleCurrency';
 import { loadState, saveState } from './db';
 import { addExtraCategories } from './extraCategories';
+import { multiCurrency } from './features';
 
 function firstState(): State {
   const stored = loadState();
   const currency = getLocales()[0]?.currencyCode ?? 'USD';
   const loaded = stored ?? (__DEV__ && process.env.EXPO_PUBLIC_DEMO === '1' ? demoState(currency) : initialState(currency));
-  const state = addExtraCategories(loaded);
+  const categorised = addExtraCategories(loaded);
+  const state = multiCurrency ? categorised : (toSingleCurrency(categorised) ?? categorised);
   if (state !== stored) saveState(stored, state);
   return state;
 }

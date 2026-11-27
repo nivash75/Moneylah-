@@ -1,11 +1,9 @@
-import { useEffect, useRef, useState, type ComponentProps, type ComponentRef, type ComponentType, type ReactNode } from 'react';
+import { useContext, useEffect, useRef, useState, type ComponentProps, type ComponentRef, type ReactNode } from 'react';
 import { Alert, Dimensions, Keyboard, Platform, Pressable, ScrollView, StyleSheet, Text, TextInput, useColorScheme, View, type TextInputProps } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import NativeSegmentedControl, { type SegmentedControlProps } from '@react-native-segmented-control/segmented-control';
 import { getLocales } from 'expo-localization';
-
-// The library's class typing predates React Native's current types.
-const SegmentedControl = NativeSegmentedControl as unknown as ComponentType<SegmentedControlProps>;
+import { LargeTitle } from './LargeTitle';
+import { SegmentedBar } from './SegmentedBar';
 
 const light = { bg: '#EFF6F0', card: '#FFFFFF', text: '#111114', dim: '#5F6B64', line: '#DDEFE0', accent: '#0B3D2E', onAccent: '#FFFFFF', income: '#1E7F3C', expense: '#D32F2F', danger: '#C92A2A', warn: '#B35C00' };
 const dark: typeof light = { bg: '#06110C', card: '#12211A', text: '#F5F5F7', dim: '#97A69D', line: '#263A2F', accent: '#8CC4A6', onAccent: '#062219', income: '#4ADE80', expense: '#FF6B6B', danger: '#FF6B6B', warn: '#FFB454' };
@@ -31,6 +29,7 @@ export function T({ children, dim, bold, size = 16, color, center }: { children:
 
 export function Screen({ children }: { children: ReactNode }) {
   const theme = useTheme();
+  const largeTitle = useContext(LargeTitle);
   const scroll = useRef<ComponentRef<typeof ScrollView>>(null);
   const offset = useRef(0);
   const [keyboard, setKeyboard] = useState(0);
@@ -65,6 +64,7 @@ export function Screen({ children }: { children: ReactNode }) {
       keyboardDismissMode="on-drag"
       scrollEventThrottle={32}
       onScroll={(e) => { offset.current = e.nativeEvent.contentOffset.y; }}>
+      {largeTitle ? <Text accessibilityRole="header" style={[styles.largeTitle, { color: theme.text }]}>{largeTitle}</Text> : null}
       {children}
     </ScrollView>
   );
@@ -98,11 +98,10 @@ export function Row({ icon, title, subtitle, value, valueColor, onPress, childre
 
 export function Segmented<V extends string>({ options, value, onChange }: { options: { value: V; label: string }[]; value: V; onChange: (v: V) => void }) {
   return (
-    <SegmentedControl
+    <SegmentedBar
       values={options.map((o) => o.label)}
       selectedIndex={options.findIndex((o) => o.value === value)}
-      onChange={(e) => onChange(options[e.nativeEvent.selectedSegmentIndex].value)}
-      style={{ height: 36 }}
+      onSelect={(index) => onChange(options[index].value)}
     />
   );
 }
@@ -173,6 +172,7 @@ export function confirm(title: string, message: string, action: string, run: () 
 
 const styles = StyleSheet.create({
   screen: { padding: 16, gap: 16, paddingBottom: 32, width: '100%', maxWidth: 700, alignSelf: 'center' },
+  largeTitle: { fontSize: 34, fontWeight: '700', paddingHorizontal: 2, marginTop: -10 },
   heading: { fontSize: 12, fontWeight: '600', paddingHorizontal: 4 },
   card: { borderRadius: 14, paddingHorizontal: 14, paddingVertical: 6 },
   row: { flexDirection: 'row', alignItems: 'center', gap: 12, minHeight: 44, paddingVertical: 6 },

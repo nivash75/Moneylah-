@@ -15,6 +15,7 @@ import { csvField, localDay, toCsv } from '../src/core/csv.ts';
 import { fromBackup, toBackup } from '../src/core/backup.ts';
 import { account, demoState, initialState } from '../src/core/seed.ts';
 import type { Txn } from '../src/core/types.ts';
+import { changeCurrency, otherCurrencies, toSingleCurrency } from '../src/core/singleCurrency.ts';
 
 const day = (y: number, m: number, d: number, h = 12) => +new Date(y, m - 1, d, h);
 const txn = (id: string, over: Partial<Txn>): Txn => ({
@@ -341,4 +342,31 @@ test('backup round-trips and rejects damaged files', () => {
   assert.throws(() => fromBackup(broken((f) => (f.state.txns[0].accountId = 'ghost'))), /missing/);
   assert.throws(() => fromBackup(broken((f) => f.state.accounts.push(f.state.accounts[0]))), /duplicate/);
   assert.throws(() => fromBackup(broken((f) => (f.state.categories[0].parentId = f.state.categories[0].id))), /category tree/);
+});
+
+test('changing the only currency keeps the numbers, and mixed currencies are left alone', () => {
+  const start = demoState('USD');
+  assert.deepEqual(otherCurrencies(start), []);
+  assert.equal(toSingleCurrency(start), start);
+  const yen = changeCurrency(start, 'JPY');
+  assert.deepEqual(otherCurrencies(yen), []);
+  assert.equal(yen.settings.baseCurrency, 'JPY');
+  assert.equal(yen.accounts[0].opening, start.accounts[0].opening / 100);
+  assert.ok(yen.txns.every((t) => t.baseCurrency === 'JPY' && t.baseAmount === t.amount));
+  assert.equal(changeCurrency(yen, 'USD').accounts[0].opening, start.accounts[0].opening);
+
+  const mixed = { ...start, accounts: [...start.accounts, account('rupees', 'Rupees', 'bank', 'INR')] };
+  assert.deepEqual(otherCurrencies(mixed), ['INR']);
+  assert.equal(changeCurrency(mixed, 'SGD'), mixed);
+  assert.equal(toSingleCurrency(mixed), null);
+
+  // Only the main currency differs: the amounts are in the accounts' currency, so that one wins.
+  const relabelled = toSingleCurrency({ ...start, settings: { ...start.settings, baseCurrency: 'INR' } });
+  assert.equal(relabelled?.settings.baseCurrency, 'USD');
+  assert.equal(relabelled?.accounts[0].opening, start.accounts[0].opening);
+
+  // With nothing recorded, the chosen main currency wins.
+  const empty = initialState('USD');
+  const chosen = toSingleCurrency({ ...empty, settings: { ...empty.settings, baseCurrency: 'INR' } });
+  assert.ok(chosen?.accounts.every((a) => a.currency === 'INR'));
 });
