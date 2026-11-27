@@ -2,7 +2,7 @@
 
 ## Report a bug or suggest a feature
 
-[Open an issue](https://github.com/tnivash/Moneylah-/issues/new/choose). Never include real financial records, backup files, or your Google Sheets link or key. Use made-up data.
+[Open an issue](https://github.com/tnivash/Moneylah/issues/new/choose). Never include real financial records, backup files, or your Google Sheets link or key. Use made-up data.
 
 For security problems, follow [SECURITY.md](SECURITY.md) instead.
 
