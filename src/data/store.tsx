@@ -3,15 +3,15 @@ import { Alert } from 'react-native';
 import { getLocales } from 'expo-localization';
 import type { State } from '../core/types';
 import { demoState, initialState } from '../core/seed';
-import { addBillCategories } from '../core/billCategories';
 import { byId, converterFor } from '../core/ledger';
 import { loadState, saveState } from './db';
+import { addExtraCategories } from './extraCategories';
 
 function firstState(): State {
   const stored = loadState();
   const currency = getLocales()[0]?.currencyCode ?? 'USD';
   const loaded = stored ?? (__DEV__ && process.env.EXPO_PUBLIC_DEMO === '1' ? demoState(currency) : initialState(currency));
-  const state = addBillCategories(loaded);
+  const state = addExtraCategories(loaded);
   if (state !== stored) saveState(stored, state);
   return state;
 }

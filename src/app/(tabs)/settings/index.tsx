@@ -3,11 +3,11 @@ import { router } from 'expo-router';
 import { File, Paths } from 'expo-file-system';
 import * as Sharing from 'expo-sharing';
 import { fromBackup, toBackup } from '../../../core/backup';
-import { addBillCategories } from '../../../core/billCategories';
 import { localDay, toCsv } from '../../../core/csv';
 import { demoState } from '../../../core/seed';
 import { toSheets } from '../../../core/excel';
 import { toXlsx } from '../../../core/xlsx';
+import { addExtraCategories } from '../../../data/extraCategories';
 import { sheetsStatus, useSheetsConfig } from '../../../data/sheets';
 import { useLedger } from '../../../data/store';
 import { backupStatus, useDriveBackup } from '../../../ui/driveBackup';
@@ -65,7 +65,7 @@ export default function Settings() {
     const restored = fromBackup(await picked.result.text());
     confirm('Replace all data?', `The backup holds ${restored.txns.length} transactions. Everything currently in the app will be deleted.`, 'Replace', () => {
       // The app lock and backup date stay as they are on this device.
-      if (update((s) => addBillCategories({ ...restored, settings: { ...restored.settings, lockEnabled: s.settings.lockEnabled, lastBackup: s.settings.lastBackup } }))) Alert.alert('Backup restored');
+      if (update((s) => addExtraCategories({ ...restored, settings: { ...restored.settings, lockEnabled: s.settings.lockEnabled, lastBackup: s.settings.lastBackup } }))) Alert.alert('Backup restored');
     });
   };
 
@@ -99,7 +99,7 @@ export default function Settings() {
       <Note>Backups are not automatic: tap {backupTitle} and pick {ios ? 'a folder there' : 'where to save it'}. To restore, choose that file. Backup files are not encrypted, so keep them somewhere private.</Note>
       {__DEV__ ? (
         <Card title="Development">
-          <Row icon="flask" title="Load sample data" onPress={() => confirm('Load sample data?', 'Everything currently in the app will be replaced.', 'Replace', () => { update((s) => addBillCategories({ ...demoState(s.settings.baseCurrency), settings: { ...s.settings, categorySet: 0 } })); })} />
+          <Row icon="flask" title="Load sample data" onPress={() => confirm('Load sample data?', 'Everything currently in the app will be replaced.', 'Replace', () => { update((s) => addExtraCategories({ ...demoState(s.settings.baseCurrency), settings: { ...s.settings, categorySet: 0 } })); })} />
         </Card>
       ) : null}
     </Screen>

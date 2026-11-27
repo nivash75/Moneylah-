@@ -10,7 +10,7 @@ It follows Apple's [Liquid Glass](https://developer.apple.com/documentation/tech
 
 ## Features
 
-- Expenses, income and transfers, with categories and subcategories, including common Singapore bills and installments
+- Expenses, income and transfers, with categories and subcategories, including common Singapore bills and installments on iPhone and iPad
 - List and calendar views
 - Weekly, monthly and yearly statistics
 - Accounts, net worth, credit card statements and payments
