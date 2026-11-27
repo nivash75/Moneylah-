@@ -342,3 +342,16 @@ test('backup round-trips and rejects damaged files', () => {
   assert.throws(() => fromBackup(broken((f) => f.state.accounts.push(f.state.accounts[0]))), /duplicate/);
   assert.throws(() => fromBackup(broken((f) => (f.state.categories[0].parentId = f.state.categories[0].id))), /category tree/);
 });
+
+test('a loan dated in the future still gets its reminder', () => {
+  const now = new Date(2026, 10, 27, 12).getTime();
+  const state = initialState('SGD');
+  const alex = account('alex', 'Alex', 'person', 'SGD');
+  state.accounts.push(alex);
+  const tomorrow = new Date(2026, 10, 28, 10).getTime();
+  const due = new Date(2026, 11, 5).getTime();
+  state.txns.push({ id: 'l1', kind: 'transfer', date: tomorrow, amount: 4000, toAmount: 4000, baseAmount: 4000, baseCurrency: 'SGD', note: '', accountId: 'account.bank', toAccountId: 'alex', categoryId: null, loan: 'lend', dueDate: due });
+  const reminders = dueReminders(state, false, now);
+  assert.equal(reminders.length, 1);
+  assert.equal(reminders[0].at, new Date(2026, 11, 5, 9).getTime());
+});

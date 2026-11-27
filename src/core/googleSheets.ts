@@ -40,9 +40,11 @@ function doPost(e) {
       if (sheet.getMaxRows() < rows) sheet.insertRowsAfter(sheet.getMaxRows(), rows - sheet.getMaxRows());
       if (sheet.getMaxColumns() < columns) sheet.insertColumnsAfter(sheet.getMaxColumns(), columns - sheet.getMaxColumns());
       sheet.getRange(1, 1, rows, columns).setValues(tab.rows);
-      // Remove rows left from a longer, earlier backup.
-      const extra = sheet.getLastRow() - rows;
-      if (extra > 0) sheet.getRange(rows + 1, 1, extra, columns).clearContent();
+      // Clear cells left from a longer or wider earlier backup.
+      const lastRow = sheet.getLastRow();
+      const lastColumn = sheet.getLastColumn();
+      if (lastRow > rows) sheet.getRange(rows + 1, 1, lastRow - rows, lastColumn).clearContent();
+      if (lastColumn > columns) sheet.getRange(1, columns + 1, rows, lastColumn - columns).clearContent();
       sheet.setFrozenRows(1);
     });
     return reply({ ok: true });
