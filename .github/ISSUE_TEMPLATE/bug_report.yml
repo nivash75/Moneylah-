@@ -1,0 +1,24 @@
+name: Bug report
+description: Something does not work as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: Use made-up data. Never include real financial records, backup files, or your Google Sheets link or key.
+  - type: textarea
+    attributes:
+      label: What happened
+      description: The steps you took, what you expected and what you saw.
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: App version
+      placeholder: 1.1.0
+    validations:
+      required: true
+  - type: input
+    attributes:
+      label: Device and iOS version
+    validations:
+      required: true
