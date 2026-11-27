@@ -1,10 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Pressable, View } from 'react-native';
-import { router, Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { inPeriod, totals } from '../../../core/ledger';
 import { format, plain } from '../../../core/money';
 import type { Txn } from '../../../core/types';
 import { useLedger } from '../../../data/store';
+import { HeaderButton } from '../../../ui/HeaderButton';
 import { Card, Note, Screen, Segmented, Stepper, T, useTheme } from '../../../ui/kit';
 import { periodTitle, usePeriod } from '../../../ui/periods';
 import { SummaryRow, TxnRow } from '../../../ui/TxnRow';
@@ -47,9 +48,7 @@ export default function Transactions() {
 
   return (
     <>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="plus" accessibilityLabel="Add transaction" onPress={() => router.push({ pathname: '/txn', params: mode === 'calendar' ? { date: String(selected) } : {} })} />
-      </Stack.Toolbar>
+      <HeaderButton placement="right" icon="plus" label="Add transaction" onPress={() => router.push({ pathname: '/txn', params: mode === 'calendar' ? { date: String(selected) } : {} })} />
       <Screen>
         <Segmented value={mode} onChange={setMode} options={[{ value: 'list', label: 'List' }, { value: 'calendar', label: 'Calendar' }]} />
         <Stepper title={periodTitle(month)} onStep={step} />

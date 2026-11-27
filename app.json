@@ -8,7 +8,8 @@
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
     "platforms": [
-      "ios"
+      "ios",
+      "android"
     ],
     "ios": {
       "supportsTablet": true,
@@ -48,6 +49,7 @@
         {
           "bundleIdentifier": "com.pocketledger.t56mtmagbkk.widgets",
           "groupIdentifier": "group.com.pocketledger.t56mtmagbkk",
+          "enableAndroid": true,
           "widgets": [
             {
               "name": "MonthWidget",
@@ -56,7 +58,14 @@
               "supportedFamilies": [
                 "systemSmall",
                 "systemMedium"
-              ]
+              ],
+              "android": {
+                "targetCellWidth": 2,
+                "targetCellHeight": 2,
+                "minWidth": 110,
+                "minHeight": 110,
+                "initialLayout": "src/widgets/MonthWidget.android.tsx"
+              }
             }
           ]
         }
@@ -73,6 +82,19 @@
     ],
     "experiments": {
       "typedRoutes": true
+    },
+    "android": {
+      "package": "com.pocketledger.moneylah",
+      "allowBackup": false,
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0B3D2E"
+      },
+      "blockedPermissions": [
+        "android.permission.SYSTEM_ALERT_WINDOW",
+        "android.permission.READ_EXTERNAL_STORAGE",
+        "android.permission.WRITE_EXTERNAL_STORAGE"
+      ]
     }
   }
 }

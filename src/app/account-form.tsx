@@ -1,13 +1,16 @@
 import { useState } from 'react';
-import { Alert, Switch } from 'react-native';
-import { router, Stack, useLocalSearchParams } from 'expo-router';
+import { Alert } from 'react-native';
+import { router, useLocalSearchParams } from 'expo-router';
 import { randomUUID } from 'expo-crypto';
 import { accountInUse, removeAccount, upsert } from '../core/actions';
 import { CURRENCIES, parseAmount, plain } from '../core/money';
 import { ACCOUNT_KINDS, type AccountKind } from '../core/types';
+import { multiCurrency } from '../data/features';
 import { useLedger } from '../data/store';
+import { HeaderButton } from '../ui/HeaderButton';
 import { accountIcon, accountTitle } from '../ui/accounts';
 import { Button, Card, Chips, confirm, decimalSeparator, Field, Note, Row, Screen } from '../ui/kit';
+import { Toggle } from '../ui/Toggle';
 
 export default function AccountForm() {
   const params = useLocalSearchParams<{ id?: string }>();
@@ -48,21 +51,21 @@ export default function AccountForm() {
 
   return (
     <>
-      <Stack.Toolbar placement="left">
-        <Stack.Toolbar.Button icon="xmark" accessibilityLabel="Cancel" onPress={() => router.back()} />
-      </Stack.Toolbar>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="checkmark" variant="prominent" accessibilityLabel="Save" onPress={save} />
-      </Stack.Toolbar>
+      <HeaderButton placement="left" icon="xmark" label="Cancel" onPress={() => router.back()} />
+      <HeaderButton placement="right" icon="checkmark" label="Save" onPress={save} />
       <Screen>
         <Card><Field label="Name" value={name} onChangeText={setName} placeholder="e.g. Savings" maxLength={60} /></Card>
         <Card title="Type"><Chips value={kind} onChange={setKind} options={ACCOUNT_KINDS.map((k) => ({ value: k, label: accountTitle(k), icon: accountIcon(k) }))} /></Card>
-        <Card title="Currency"><Chips value={currency} onChange={setCurrency} disabled={used} options={currencies.map((c) => ({ value: c, label: c }))} /></Card>
-        {used ? <Note>The currency is fixed because this account has transactions.</Note> : null}
+        {multiCurrency ? (
+          <>
+            <Card title="Currency"><Chips value={currency} onChange={setCurrency} disabled={used} options={currencies.map((c) => ({ value: c, label: c }))} /></Card>
+            {used ? <Note>The currency is fixed because this account has transactions.</Note> : null}
+          </>
+        ) : null}
         <Card>
           <Field label="Opening balance" value={opening} onChangeText={setOpening} keyboardType="numbers-and-punctuation" placeholder="0" />
-          <Row title="Include in net worth"><Switch value={includeInTotal} onValueChange={setInclude} /></Row>
-          {existing ? <Row title="Archived"><Switch value={archived} onValueChange={setArchived} /></Row> : null}
+          <Row title="Include in net worth"><Toggle accessibilityLabel="Include in net worth" value={includeInTotal} onValueChange={setInclude} /></Row>
+          {existing ? <Row title="Archived"><Toggle accessibilityLabel="Archived" value={archived} onValueChange={setArchived} /></Row> : null}
         </Card>
         {kind === 'card' ? (
           <>

@@ -1,13 +1,20 @@
 import { useState } from 'react';
-import { Alert, Linking, Switch } from 'react-native';
-import { Stack } from 'expo-router';
+import { Alert, Linking } from 'react-native';
 import { remove, upsert } from '../core/actions';
 import { CURRENCIES } from '../core/money';
+import { multiCurrency } from '../data/features';
 import { useRefreshRates } from '../data/rates';
 import { useLedger } from '../data/store';
+import { HeaderButton } from '../ui/HeaderButton';
 import { Card, Chips, confirm, decimalSeparator, Field, Note, Row, Screen } from '../ui/kit';
+import { MainCurrency } from '../ui/MainCurrency';
+import { Toggle } from '../ui/Toggle';
 
-export default function Rates() {
+export default function Currencies() {
+  return multiCurrency ? <ExchangeRates /> : <MainCurrency />;
+}
+
+function ExchangeRates() {
   const { state, update } = useLedger();
   const separator = decimalSeparator();
   const base = state.settings.baseCurrency;
@@ -48,15 +55,13 @@ export default function Rates() {
 
   return (
     <Screen>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="checkmark" variant="prominent" accessibilityLabel="Save rates" hidden={autoRates || needed.length === 0} onPress={save} />
-      </Stack.Toolbar>
+      <HeaderButton placement="right" icon="checkmark" label="Save rates" hidden={autoRates || needed.length === 0} onPress={save} />
       <Card title="Main currency">
         <Chips value={base} onChange={changeBase} options={[...new Set([base, ...CURRENCIES])].map((c) => ({ value: c, label: c }))} />
       </Card>
       <Card>
         <Row icon="sync" title="Use today's rates">
-          <Switch accessibilityLabel="Use today's rates" value={autoRates} onValueChange={(on) => { setDrafts({}); update((s) => ({ ...s, settings: { ...s.settings, autoRates: on, ratesUpdated: 0 } })); }} />
+          <Toggle accessibilityLabel="Use today's rates" value={autoRates} onValueChange={(on) => { setDrafts({}); update((s) => ({ ...s, settings: { ...s.settings, autoRates: on, ratesUpdated: 0 } })); }} />
         </Row>
         {autoRates && needed.length ? <Row icon="refresh" title="Update now" subtitle={updatedText} onPress={() => void refresh().catch(() => Alert.alert('Could not update rates', 'Check your internet connection and try again.'))} /> : null}
       </Card>

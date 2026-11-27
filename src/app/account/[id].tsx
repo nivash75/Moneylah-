@@ -3,6 +3,7 @@ import { balance, cardStatement, endOfDay } from '../../core/ledger';
 import { isOverdue, loanStatus } from '../../core/loans';
 import { format } from '../../core/money';
 import { useLedger } from '../../data/store';
+import { HeaderButton } from '../../ui/HeaderButton';
 import { Button, Card, Note, Row, Screen, useTheme } from '../../ui/kit';
 import { TxnRow } from '../../ui/TxnRow';
 
@@ -24,9 +25,7 @@ export default function AccountDetail() {
   return (
     <Screen>
       <Stack.Screen options={{ title: account.name }} />
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="pencil" accessibilityLabel="Edit account" onPress={() => router.push({ pathname: '/account-form', params: { id } })} />
-      </Stack.Toolbar>
+      <HeaderButton placement="right" icon="pencil" label="Edit account" onPress={() => router.push({ pathname: '/account-form', params: { id } })} />
       <Card>
         {loan ? <Row title={current > 0 ? 'Owes you' : current < 0 ? 'You owe' : 'Settled'} value={money(Math.abs(current))} valueColor={current > 0 ? theme.income : current < 0 ? theme.expense : undefined} /> : <Row title="Balance today" value={money(current)} />}
         {card && account.creditLimit > 0 ? <Row title="Available credit" value={money(account.creditLimit + Math.min(current, 0))} /> : null}

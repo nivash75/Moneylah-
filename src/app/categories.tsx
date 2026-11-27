@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { View } from 'react-native';
-import { router, Stack } from 'expo-router';
+import { router } from 'expo-router';
 import { useLedger } from '../data/store';
+import { HeaderButton } from '../ui/HeaderButton';
 import { Card, Row, Screen, Segmented } from '../ui/kit';
 
 export default function Categories() {
@@ -11,9 +12,7 @@ export default function Categories() {
   const edit = (id: string) => router.push({ pathname: '/category-form', params: { id } });
   return (
     <Screen>
-      <Stack.Toolbar placement="right">
-        <Stack.Toolbar.Button icon="plus" accessibilityLabel="Add category" onPress={() => router.push({ pathname: '/category-form', params: { kind } })} />
-      </Stack.Toolbar>
+      <HeaderButton placement="right" icon="plus" label="Add category" onPress={() => router.push({ pathname: '/category-form', params: { kind } })} />
       <Segmented value={kind} onChange={setKind} options={[{ value: 'expense', label: 'Expense' }, { value: 'income', label: 'Income' }]} />
       {sorted.filter((c) => !c.parentId).map((root) => (
         <Card key={root.id}>

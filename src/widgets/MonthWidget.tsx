@@ -1,16 +1,7 @@
 import { ProgressView, Text, VStack } from '@expo/ui/swift-ui';
 import { containerBackground, font, foregroundStyle, frame, lineLimit, minimumScaleFactor, privacySensitive, tint } from '@expo/ui/swift-ui/modifiers';
 import { createWidget, type WidgetEnvironment } from 'expo-widgets';
-
-export type MonthProps = {
-  title: string;
-  income: string;
-  expense: string;
-  /** Share of the overall budget used, or -1 without a budget. */
-  budget: number;
-  /** Cash, bank and savings today. */
-  balance: string;
-};
+import type { MonthProps } from './useWidgetSync';
 
 // Runs inside the widget extension: it can only use its arguments and the imports above.
 const Month = (props: MonthProps, environment: WidgetEnvironment) => {

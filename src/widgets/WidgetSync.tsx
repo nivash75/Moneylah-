@@ -1,44 +1,11 @@
-import { useEffect, useState } from 'react';
-import { AppState } from 'react-native';
-import { format } from '../core/money';
-import { cashInHand, inPeriod, periodOf, shift, spent, totals } from '../core/ledger';
-import { useLedger } from '../data/store';
-import { periodTitle } from '../ui/periods';
 import MonthWidget from './MonthWidget';
+import { useWidgetSync, type WidgetData } from './useWidgetSync';
 
-/** Pushes the current cycle's summary to the home screen widget whenever the data changes. */
+// The timeline starts the new cycle at zero even if the app isn't opened.
+const publish = ({ current, next }: WidgetData) => MonthWidget.updateTimeline([{ date: new Date(), props: current }, next]);
+
+/** Keeps the home screen widget up to date. */
 export function WidgetSync() {
-  const { state, accounts, categories, converter } = useLedger();
-  const [activations, setActivations] = useState(0);
-
-  useEffect(() => {
-    const sub = AppState.addEventListener('change', (s) => { if (s === 'active') setActivations((n) => n + 1); });
-    return () => sub.remove();
-  }, []);
-
-  useEffect(() => {
-    const month = periodOf('month', Date.now(), 1, state.settings.cycleDay);
-    const sum = totals(state.txns.filter(inPeriod(month)), converter, accounts);
-    const overall = state.budgets.find((b) => b.categoryId === null);
-    const used = overall ? spent(overall, state.txns, month, converter, accounts, categories) : null;
-    const hide = state.settings.hideWidgetAmounts;
-    const money = (value: number) => (hide ? '••••' : format(value, converter.base));
-    const next = shift(month, 1);
-    const inHand = (date: number) => {
-      const cash = cashInHand(state, converter, date);
-      // A partial total would mislead.
-      return cash.unconverted ? 'Rate missing' : money(cash.amount);
-    };
-    try {
-      MonthWidget.updateTimeline([
-        { date: new Date(), props: { title: periodTitle(month), income: money(sum.income), expense: money(sum.expense), budget: !hide && overall && used !== null && overall.amount > 0 ? used / overall.amount : -1, balance: inHand(Date.now()) } },
-        // Start the new cycle at zero even if the app isn't opened.
-        { date: new Date(next.start), props: { title: periodTitle(next), income: money(0), expense: money(0), budget: -1, balance: inHand(next.start) } },
-      ]);
-    } catch (error) {
-      console.warn('Widget update failed', error);
-    }
-  }, [state, accounts, categories, converter, activations]);
-
+  useWidgetSync(publish);
   return null;
 }
